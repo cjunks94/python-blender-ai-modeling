@@ -11,6 +11,14 @@ from flask import Flask, render_template, request, jsonify, send_file
 from pathlib import Path
 from typing import Dict, Any
 
+# Import Blender integration
+try:
+    from blender_integration.executor import BlenderExecutor, BlenderExecutionError, BlenderScriptError
+    BLENDER_AVAILABLE = True
+except ImportError:
+    BLENDER_AVAILABLE = False
+    BlenderExecutor = None
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,8 +35,16 @@ def create_app(config: Dict[str, Any] = None) -> Flask:
         'SECRET_KEY': os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production'),
         'DEBUG': os.environ.get('FLASK_DEBUG', 'False').lower() == 'true',
         'BLENDER_PATH': os.environ.get('BLENDER_EXECUTABLE_PATH', 'blender'),
+        'BLENDER_TIMEOUT': int(os.environ.get('BLENDER_TIMEOUT', '30')),
         'MAX_CONTENT_LENGTH': 16 * 1024 * 1024,  # 16MB max file upload
     })
+    
+    # Initialize Blender executor if available
+    if BLENDER_AVAILABLE:
+        app.blender_executor = BlenderExecutor(
+            blender_path=app.config['BLENDER_PATH'],
+            timeout=app.config['BLENDER_TIMEOUT']
+        )
     
     if config:
         app.config.update(config)
@@ -55,7 +71,9 @@ def register_routes(app: Flask) -> None:
         return jsonify({
             'status': 'healthy',
             'version': '0.1.0',
-            'blender_path': app.config['BLENDER_PATH']
+            'blender_path': app.config['BLENDER_PATH'],
+            'blender_available': BLENDER_AVAILABLE,
+            'blender_timeout': app.config['BLENDER_TIMEOUT']
         })
     
     @app.route('/api/generate', methods=['POST'])
@@ -89,21 +107,73 @@ def register_routes(app: Flask) -> None:
             except (ValueError, TypeError):
                 return jsonify({'error': 'Size and position must be valid numbers'}), 400
             
-            # TODO: Implement actual Blender integration
-            # For now, return a mock response
-            model_id = f"model_{data['object_type']}_{int(size*10)}_{int(pos_x*10)}"
+            # Check if Blender integration is available
+            if not BLENDER_AVAILABLE:
+                return jsonify({
+                    'error': 'Blender integration not available',
+                    'message': 'Please ensure Blender is installed and accessible'
+                }), 503
             
-            response = {
-                'id': model_id,
-                'object_type': data['object_type'],
-                'parameters': {
-                    'size': size,
-                    'pos_x': pos_x
-                },
-                'status': 'generated',
-                'message': f'Successfully generated {data["object_type"]} with size {size} at position X={pos_x}',
-                'created_at': '2024-01-01T12:00:00Z'  # TODO: Use actual timestamp
-            }
+            # Generate basic bpy script (placeholder - will be improved in next ticket)
+            script_content = f"""
+import bpy
+
+# Clear existing mesh objects
+bpy.ops.object.select_all(action='SELECT')
+bpy.ops.object.delete(use_global=False, confirm=False)
+
+# Add {data['object_type']}
+if '{data['object_type']}' == 'cube':
+    bpy.ops.mesh.primitive_cube_add(size={size}, location=({pos_x}, 0, 0))
+elif '{data['object_type']}' == 'sphere':
+    bpy.ops.mesh.primitive_uv_sphere_add(radius={size/2}, location=({pos_x}, 0, 0))
+elif '{data['object_type']}' == 'cylinder':
+    bpy.ops.mesh.primitive_cylinder_add(radius={size/2}, depth={size}, location=({pos_x}, 0, 0))
+elif '{data['object_type']}' == 'plane':
+    bpy.ops.mesh.primitive_plane_add(size={size}, location=({pos_x}, 0, 0))
+
+print("Model generated successfully")
+"""
+            
+            try:
+                # Execute Blender script
+                result = app.blender_executor.execute_script(script_content)
+                
+                if result.success:
+                    model_id = f"model_{data['object_type']}_{int(size*10)}_{int(pos_x*10)}"
+                    
+                    response = {
+                        'id': model_id,
+                        'object_type': data['object_type'],
+                        'parameters': {
+                            'size': size,
+                            'pos_x': pos_x
+                        },
+                        'status': 'generated',
+                        'message': f'Successfully generated {data["object_type"]} with size {size} at position X={pos_x}',
+                        'blender_output': result.stdout,
+                        'created_at': '2024-01-01T12:00:00Z'  # TODO: Use actual timestamp
+                    }
+                else:
+                    return jsonify({
+                        'error': 'Blender execution failed',
+                        'details': result.stderr,
+                        'return_code': result.return_code
+                    }), 500
+                    
+            except BlenderExecutionError as e:
+                logger.error(f"Blender execution error: {e}")
+                return jsonify({
+                    'error': 'Blender execution failed',
+                    'message': str(e)
+                }), 500
+            
+            except BlenderScriptError as e:
+                logger.error(f"Blender script error: {e}")
+                return jsonify({
+                    'error': 'Invalid Blender script',
+                    'message': str(e)
+                }), 400
             
             logger.info(f"Generated model: {model_id}")
             return jsonify(response)

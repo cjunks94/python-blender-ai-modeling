@@ -1,0 +1,1 @@
+"""AI integration module for natural language to 3D model translation."""

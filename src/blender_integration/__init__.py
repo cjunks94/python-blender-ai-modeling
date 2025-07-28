@@ -1,0 +1,1 @@
+"""Blender integration module for programmatic 3D modeling."""

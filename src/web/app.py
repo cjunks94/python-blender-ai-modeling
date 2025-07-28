@@ -14,10 +14,12 @@ from typing import Dict, Any
 # Import Blender integration
 try:
     from blender_integration.executor import BlenderExecutor, BlenderExecutionError, BlenderScriptError
+    from blender_integration.script_generator import ScriptGenerator, ScriptGenerationError
     BLENDER_AVAILABLE = True
 except ImportError:
     BLENDER_AVAILABLE = False
     BlenderExecutor = None
+    ScriptGenerator = None
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -39,12 +41,13 @@ def create_app(config: Dict[str, Any] = None) -> Flask:
         'MAX_CONTENT_LENGTH': 16 * 1024 * 1024,  # 16MB max file upload
     })
     
-    # Initialize Blender executor if available
+    # Initialize Blender tools if available
     if BLENDER_AVAILABLE:
         app.blender_executor = BlenderExecutor(
             blender_path=app.config['BLENDER_PATH'],
             timeout=app.config['BLENDER_TIMEOUT']
         )
+        app.script_generator = ScriptGenerator(clear_scene=True)
     
     if config:
         app.config.update(config)
@@ -114,26 +117,26 @@ def register_routes(app: Flask) -> None:
                     'message': 'Please ensure Blender is installed and accessible'
                 }), 503
             
-            # Generate basic bpy script (placeholder - will be improved in next ticket)
-            script_content = f"""
-import bpy
-
-# Clear existing mesh objects
-bpy.ops.object.select_all(action='SELECT')
-bpy.ops.object.delete(use_global=False, confirm=False)
-
-# Add {data['object_type']}
-if '{data['object_type']}' == 'cube':
-    bpy.ops.mesh.primitive_cube_add(size={size}, location=({pos_x}, 0, 0))
-elif '{data['object_type']}' == 'sphere':
-    bpy.ops.mesh.primitive_uv_sphere_add(radius={size/2}, location=({pos_x}, 0, 0))
-elif '{data['object_type']}' == 'cylinder':
-    bpy.ops.mesh.primitive_cylinder_add(radius={size/2}, depth={size}, location=({pos_x}, 0, 0))
-elif '{data['object_type']}' == 'plane':
-    bpy.ops.mesh.primitive_plane_add(size={size}, location=({pos_x}, 0, 0))
-
-print("Model generated successfully")
-"""
+            # Generate bpy script using ScriptGenerator
+            try:
+                if data['object_type'] == 'cube':
+                    script_content = app.script_generator.generate_cube_script(
+                        size=size,
+                        position=(pos_x, 0, 0)
+                    )
+                else:
+                    # TODO: Add sphere, cylinder, plane generators in future tickets
+                    return jsonify({
+                        'error': f"Object type '{data['object_type']}' not yet supported by script generator",
+                        'message': 'Currently only cube generation is implemented'
+                    }), 501
+                    
+            except ScriptGenerationError as e:
+                logger.error(f"Script generation error: {e}")
+                return jsonify({
+                    'error': 'Script generation failed',
+                    'message': str(e)
+                }), 400
             
             try:
                 # Execute Blender script
@@ -172,6 +175,13 @@ print("Model generated successfully")
                 logger.error(f"Blender script error: {e}")
                 return jsonify({
                     'error': 'Invalid Blender script',
+                    'message': str(e)
+                }), 400
+            
+            except ScriptGenerationError as e:
+                logger.error(f"Script generation error: {e}")
+                return jsonify({
+                    'error': 'Script generation failed',
                     'message': str(e)
                 }), 400
             

@@ -48,10 +48,15 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Run the application
-python src/web/app.py
+# 4. Configure Blender path (IMPORTANT!)
+python setup_blender.py
+# This will find Blender and create a .env file
 
-# 5. Open browser to http://127.0.0.1:5001
+# 5. Run the application
+python start_server.py
+# Or: python src/web/app.py
+
+# 6. Open browser to http://127.0.0.1:5001
 ```
 
 **Create your first model:**

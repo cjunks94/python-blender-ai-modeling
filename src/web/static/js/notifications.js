@@ -66,9 +66,18 @@ class NotificationSystem {
     createNotification(id, message, type, options) {
         const notification = document.createElement('div');
         notification.id = `notification-${id}`;
+        // Add type-specific styling
+        const typeStyles = {
+            error: 'bg-red-50 border-red-200',
+            success: 'bg-green-50 border-green-200',
+            warning: 'bg-yellow-50 border-yellow-200',
+            info: 'bg-blue-50 border-blue-200'
+        };
+        
         notification.className = `
             transform translate-x-full opacity-0 transition-all duration-300 ease-in-out
-            max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5
+            max-w-md w-full ${typeStyles[type] || 'bg-white'} shadow-lg rounded-lg pointer-events-auto 
+            ring-1 ring-black ring-opacity-5 border-2
         `;
         
         const typeConfig = this.getTypeConfig(type);
@@ -83,8 +92,8 @@ class NotificationSystem {
                         <p class="text-sm font-medium text-gray-900">
                             ${options.title || typeConfig.title}
                         </p>
-                        <p class="mt-1 text-sm text-gray-500">
-                            ${message}
+                        <p class="mt-1 text-sm text-gray-500 break-words">
+                            ${this.escapeHtml(message)}
                         </p>
                     </div>
                     <div class="ml-4 flex-shrink-0 flex">
@@ -136,6 +145,12 @@ class NotificationSystem {
     
     generateId() {
         return Math.random().toString(36).substr(2, 9);
+    }
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     
     clear() {

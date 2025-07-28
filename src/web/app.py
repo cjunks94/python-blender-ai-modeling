@@ -15,6 +15,18 @@ from typing import Dict, Any
 # Add parent directory to Python path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Load environment variables from .env file if it exists
+from pathlib import Path
+env_file = Path(__file__).parent.parent.parent / '.env'
+if env_file.exists():
+    with open(env_file) as f:
+        for line in f:
+            if '=' in line and not line.startswith('#'):
+                key, value = line.strip().split('=', 1)
+                # Remove quotes if present
+                value = value.strip('"\'')
+                os.environ[key] = value
+
 # Import Blender integration
 try:
     from blender_integration.executor import BlenderExecutor, BlenderExecutionError, BlenderScriptError
@@ -203,7 +215,7 @@ def register_routes(app: Flask) -> None:
                     },
                     'not_found': {
                         'error': 'Blender not found',
-                        'message': 'Blender executable not found. Please ensure Blender is installed and accessible.',
+                        'message': 'Blender is not installed or not in PATH. Run: python setup_blender.py to configure.',
                         'code': 503
                     },
                     'permission': {

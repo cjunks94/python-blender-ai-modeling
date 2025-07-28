@@ -10,9 +10,11 @@ This web application provides an intuitive interface for generating 3D models by
 
 - **Modern Web UI**: Responsive interface built with HTML, Tailwind CSS, and vanilla JavaScript
 - **Real-time Interaction**: Interactive forms with live parameter feedback and validation
-- **Blender Integration**: Seamless background execution of Blender scripts via subprocess
-- **AI-Powered Modeling** (Stretch Goal): Natural language to 3D model translation using Claude/OpenAI APIs
-- **Export Support**: Multiple format support (OBJ, GLTF, STL) with direct download
+- **Blender Integration**: Seamless background execution of Blender scripts via subprocess with enhanced error handling
+- **Parametric Script Generation**: Automatic generation of bpy scripts for 3D objects with validation
+- **OBJ Export Support**: Export generated models to OBJ format with direct download
+- **Enhanced Error Handling**: Retry mechanisms, categorized errors, and user-friendly messages
+- **Test-Driven Development**: 64 comprehensive tests ensuring reliability and maintainability
 - **Modular Architecture**: Clean separation of web interface, API logic, Blender integration, and export functionality
 
 ## Prerequisites
@@ -29,6 +31,55 @@ Ensure Blender is accessible from command line:
 blender --version
 # Should output Blender version information
 ```
+
+## Quick Start Guide
+
+**Get up and running in 5 minutes:**
+
+```bash
+# 1. Clone and navigate to project
+git clone https://github.com/cjunker/python-blender-ai-modeling.git
+cd python-blender-ai-modeling
+
+# 2. Set up Python environment  
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Run the application
+python src/web/app.py
+
+# 5. Open browser to http://127.0.0.1:5000
+```
+
+**Create your first model:**
+1. Select "Cube" as object type
+2. Set size to 2.0 and position X to 1.0
+3. Click "Generate Model"
+4. Export as OBJ and download
+
+## Example Gallery
+
+### What You Can Create
+
+**Basic Cube Models**:
+- Small cube (size: 0.5) at origin → `small_cube.obj`
+- Large cube (size: 3.0) offset to the right → `large_offset_cube.obj` 
+- Precise positioning for architectural layouts
+
+**Model Parameters**:
+- **Size Range**: 0.1 to 10.0 units
+- **Position X**: -10.0 to 10.0 units (Y and Z at origin currently)
+- **Export Format**: OBJ with proper vertex normals and face definitions
+
+**Generated Files**:
+All models are exported as standard OBJ files that can be imported into:
+- Blender (for further editing)
+- Unity/Unreal Engine (for game development)
+- 3D printing software (Cura, PrusaSlicer)
+- CAD applications (Fusion 360, SolidWorks)
 
 ## Installation
 
@@ -70,19 +121,84 @@ pip install -e ".[dev,ai,advanced-ui,export]"
 
 ### Basic Object Creation
 
-1. Launch the application: `python main.py`
-2. Open your browser to `http://127.0.0.1:5000`
-3. Select object type (cube, sphere, cylinder, plane)
-4. Adjust parameters using the interactive sliders (size, position)
-5. Click "Generate Model" to create your 3D object
-6. Choose export format and download your model
+1. **Launch the application**:
+   ```bash
+   python main.py
+   # Or alternatively:
+   python src/web/app.py
+   ```
 
-### AI-Powered Modeling (Future Feature)
+2. **Access the web interface**:
+   - Open your browser to `http://127.0.0.1:5000`
 
-1. Enter natural language description: "Create a red house with a blue roof"
-2. The AI translates this into appropriate bpy code
-3. Review and modify generated script if needed
-4. Execute to create the model
+3. **Create a 3D model**:
+   - Currently supports: **Cube objects**
+   - Adjust parameters:
+     - **Size**: 0.1 to 10.0 units
+     - **Position X**: -10.0 to 10.0 units
+   - Click "Generate Model" to create your 3D object
+
+4. **Export your model**:
+   - After successful generation, use the export functionality
+   - Supported format: **OBJ**
+   - Files are saved to `./exports/` directory
+   - Download directly through the web interface
+
+### API Usage
+
+The application also provides REST API endpoints for programmatic access:
+
+#### Health Check
+```bash
+curl http://localhost:5000/api/health
+```
+
+#### Generate Model
+```bash
+curl -X POST http://localhost:5000/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "object_type": "cube",
+    "size": 2.0,
+    "pos_x": 1.0
+  }'
+```
+
+#### Export Model
+```bash
+curl -X POST http://localhost:5000/api/export \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_id": "my_cube_model",
+    "format": "obj",
+    "model_params": {
+      "object_type": "cube",
+      "size": 2.0,
+      "pos_x": 1.0
+    }
+  }'
+```
+
+#### Download Exported File
+```bash
+curl http://localhost:5000/api/download/my_cube_model.obj -o model.obj
+```
+
+### Troubleshooting
+
+#### Common Issues
+
+1. **Blender not found**: Ensure Blender is installed and accessible via `blender` command
+2. **Permission errors**: Check that the application has write permissions for the `exports/` directory
+3. **Timeout errors**: Large or complex models may take longer - the default timeout is 30 seconds
+
+#### Error Messages
+
+The application provides detailed error messages for common issues:
+- **Blender execution timeout**: Operation took too long
+- **Blender not found**: Blender executable not accessible
+- **Permission denied**: File system permission issues
+- **Invalid parameters**: Model parameter validation errors
 
 ## Development
 
@@ -106,18 +222,29 @@ python-blender-ai-modeling/
 
 ### Testing
 
-Run the test suite:
+The project has comprehensive test coverage with 64 tests across all modules:
 
 ```bash
-# All tests
+# Run all tests (using unittest)
+python -m unittest discover tests -v
+
+# Run specific test modules
+python -m unittest tests.test_blender_integration -v  # 26 tests
+python -m unittest tests.test_script_generator -v    # 22 tests  
+python -m unittest tests.test_export -v              # 16 tests
+
+# Run with pytest (if installed)
 python -m pytest
 
-# With coverage
+# With coverage (if pytest-cov installed)
 python -m pytest --cov=src --cov-report=html
-
-# Specific module
-python -m pytest tests/test_ui.py -v
 ```
+
+**Test Coverage by Module**:
+- **Blender Integration**: 26 tests covering subprocess execution, error handling, retry mechanisms
+- **Script Generation**: 22 tests covering bpy script generation and validation  
+- **Export Functionality**: 16 tests covering OBJ export, file operations, error scenarios
+- **Total**: 64 tests ensuring reliability and maintainability
 
 ### Code Quality
 
@@ -145,31 +272,58 @@ Check for security issues:
 pip-audit
 ```
 
+## Current Implementation Status
+
+### ✅ **Fully Implemented Features**
+
+- **Web Interface**: Modern, responsive UI built with HTML, Tailwind CSS, and vanilla JavaScript
+- **Cube Generation**: Create parametric cube objects with size and position controls
+- **Blender Integration**: Robust subprocess execution with comprehensive error handling
+- **OBJ Export**: Export generated models to OBJ format with automatic file serving
+- **API Endpoints**: Complete REST API for programmatic access
+- **Error Handling**: Categorized errors, retry mechanisms, and user-friendly messages
+- **Testing**: 64 comprehensive tests ensuring reliability across all modules
+
+### 🚧 **Partially Implemented Features**
+
+- **Additional Object Types**: Architecture in place, currently supports cubes only
+- **Web UI Forms**: Interface ready for additional object types and parameters
+
+### 📋 **Ready for Implementation**
+
+The codebase is architected to easily support:
+- Additional object types (sphere, cylinder, plane) - just need new script generators
+- Additional export formats (GLTF, STL) - export framework is modular
+- Enhanced parameter controls - UI and validation framework is extensible
+
 ## Configuration
 
 ### Environment Variables
 
-Create a `.env` file for configuration:
+The application works out-of-the-box with default settings. For customization, set these environment variables:
 
 ```bash
 # Flask Configuration
-FLASK_DEBUG=True
-PORT=5000
-HOST=127.0.0.1
-SECRET_KEY=your-secret-key-here
-
-# AI API Keys (optional)
-ANTHROPIC_API_KEY=your_claude_api_key_here
-OPENAI_API_KEY=your_openai_api_key_here
+FLASK_DEBUG=False                    # Set to True for development
+PORT=5000                           # Web server port
+SECRET_KEY=your-secret-key-here     # For session security
 
 # Blender Configuration
-BLENDER_EXECUTABLE_PATH=/path/to/blender  # If not in PATH
+BLENDER_EXECUTABLE_PATH=blender     # Path to Blender executable
+BLENDER_TIMEOUT=30                  # Execution timeout in seconds
 
-# Application Settings
-DEFAULT_EXPORT_FORMAT=obj
-PREVIEW_RESOLUTION=512
-LOG_LEVEL=INFO
-LOG_FILE=blender_ai_modeling.log
+# Export Configuration
+EXPORT_DIR=./exports               # Directory for exported files
+
+# Logging
+LOG_LEVEL=INFO                     # DEBUG, INFO, WARNING, ERROR
+```
+
+**For development**, create a `.env` file in the project root:
+```bash
+FLASK_DEBUG=True
+BLENDER_TIMEOUT=60
+LOG_LEVEL=DEBUG
 ```
 
 ## Architecture
@@ -208,29 +362,35 @@ LOG_FILE=blender_ai_modeling.log
 
 ## Roadmap
 
-### Phase 1: Core Foundation (MVP)
+### Phase 1: Core Foundation (MVP) ✅ **COMPLETED**
 - [x] Project setup and structure
-- [ ] Basic UI with object creation forms
-- [ ] Blender integration with subprocess execution
-- [ ] Simple object generation (cube, sphere, cylinder)
+- [x] Modern web UI with responsive design
+- [x] Blender integration with subprocess execution
+- [x] Enhanced error handling and retry mechanisms
+- [x] Parametric script generation for cube objects
+- [x] OBJ export functionality with file download
+- [x] Comprehensive test coverage (64 tests)
 
-### Phase 2: Enhanced Features
-- [ ] Advanced parameter controls
-- [ ] Real-time preview
-- [ ] Multiple object types and materials
-- [ ] Export functionality
+### Phase 2: Enhanced Features (In Progress)
+- [ ] Additional object types (sphere, cylinder, plane)
+- [ ] Advanced parameter controls (rotation, materials)
+- [ ] Real-time model preview
+- [ ] Additional export formats (GLTF, STL)
+- [ ] Batch processing capabilities
 
-### Phase 3: AI Integration
-- [ ] Natural language processing
+### Phase 3: AI Integration (Future)
+- [ ] Natural language processing for model descriptions
 - [ ] AI API integration (Claude/OpenAI)
-- [ ] Code generation and validation
+- [ ] Intelligent bpy code generation and validation
 - [ ] Smart parameter recommendations
+- [ ] Model suggestion system
 
-### Phase 4: Advanced Features
-- [ ] Batch processing
-- [ ] Plugin system
-- [ ] Advanced export options
-- [ ] Community model sharing
+### Phase 4: Advanced Features (Future)
+- [ ] Plugin system for custom object types
+- [ ] Advanced export options and optimization
+- [ ] Community model sharing platform
+- [ ] Performance optimization and caching
+- [ ] Docker containerization
 
 ## License
 

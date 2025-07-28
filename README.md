@@ -51,7 +51,7 @@ pip install -r requirements.txt
 # 4. Run the application
 python src/web/app.py
 
-# 5. Open browser to http://127.0.0.1:5000
+# 5. Open browser to http://127.0.0.1:5001
 ```
 
 **Create your first model:**
@@ -107,7 +107,7 @@ pip install -e .
 python main.py
 ```
 
-5. Open your browser and visit: `http://127.0.0.1:5000`
+5. Open your browser and visit: `http://127.0.0.1:5001`
 
 ### Development Installation
 
@@ -129,7 +129,7 @@ pip install -e ".[dev,ai,advanced-ui,export]"
    ```
 
 2. **Access the web interface**:
-   - Open your browser to `http://127.0.0.1:5000`
+   - Open your browser to `http://127.0.0.1:5001`
 
 3. **Create a 3D model**:
    - Currently supports: **Cube objects**
@@ -150,12 +150,12 @@ The application also provides REST API endpoints for programmatic access:
 
 #### Health Check
 ```bash
-curl http://localhost:5000/api/health
+curl http://localhost:5001/api/health
 ```
 
 #### Generate Model
 ```bash
-curl -X POST http://localhost:5000/api/generate \
+curl -X POST http://localhost:5001/api/generate \
   -H "Content-Type: application/json" \
   -d '{
     "object_type": "cube",
@@ -166,7 +166,7 @@ curl -X POST http://localhost:5000/api/generate \
 
 #### Export Model
 ```bash
-curl -X POST http://localhost:5000/api/export \
+curl -X POST http://localhost:5001/api/export \
   -H "Content-Type: application/json" \
   -d '{
     "model_id": "my_cube_model",
@@ -181,7 +181,7 @@ curl -X POST http://localhost:5000/api/export \
 
 #### Download Exported File
 ```bash
-curl http://localhost:5000/api/download/my_cube_model.obj -o model.obj
+curl http://localhost:5001/api/download/my_cube_model.obj -o model.obj
 ```
 
 ### Troubleshooting
@@ -305,7 +305,7 @@ The application works out-of-the-box with default settings. For customization, s
 ```bash
 # Flask Configuration
 FLASK_DEBUG=False                    # Set to True for development
-PORT=5000                           # Web server port
+PORT=5001                           # Web server port (default changed to avoid macOS AirPlay conflict)
 SECRET_KEY=your-secret-key-here     # For session security
 
 # Blender Configuration

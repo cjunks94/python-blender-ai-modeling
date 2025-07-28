@@ -430,8 +430,9 @@ app = create_app()
 
 if __name__ == '__main__':
     # Development server
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))  # Changed default port to avoid macOS AirPlay conflict
     debug = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
     
     logger.info(f"Starting Flask development server on port {port}")
+    logger.info(f"Access the application at: http://127.0.0.1:{port}")
     app.run(host='0.0.0.0', port=port, debug=debug)

@@ -4,15 +4,16 @@ A desktop application for creating and manipulating 3D models using Blender prog
 
 ## Overview
 
-This application provides a user-friendly interface for generating 3D models by translating user inputs into Blender Python (bpy) scripts. The app executes these scripts in Blender's background mode, enabling programmatic 3D modeling without requiring direct Blender knowledge.
+This web application provides an intuitive interface for generating 3D models by translating user inputs into Blender Python (bpy) scripts. The app executes these scripts in Blender's background mode through a modern web interface, enabling programmatic 3D modeling without requiring direct Blender knowledge.
 
 ### Key Features
 
-- **Intuitive UI**: Simple interface for creating basic 3D objects (cubes, spheres, cylinders)
+- **Modern Web UI**: Responsive interface built with HTML, Tailwind CSS, and vanilla JavaScript
+- **Real-time Interaction**: Interactive forms with live parameter feedback and validation
 - **Blender Integration**: Seamless background execution of Blender scripts via subprocess
 - **AI-Powered Modeling** (Stretch Goal): Natural language to 3D model translation using Claude/OpenAI APIs
-- **Export Support**: Multiple format support (OBJ, GLTF, STL) with preview capabilities
-- **Modular Architecture**: Clean separation of UI, Blender integration, AI features, and export functionality
+- **Export Support**: Multiple format support (OBJ, GLTF, STL) with direct download
+- **Modular Architecture**: Clean separation of web interface, API logic, Blender integration, and export functionality
 
 ## Prerequisites
 
@@ -50,10 +51,12 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -e .
 ```
 
-4. Run the application:
+4. Run the web application:
 ```bash
 python main.py
 ```
+
+5. Open your browser and visit: `http://127.0.0.1:5000`
 
 ### Development Installation
 
@@ -68,10 +71,11 @@ pip install -e ".[dev,ai,advanced-ui,export]"
 ### Basic Object Creation
 
 1. Launch the application: `python main.py`
-2. Select object type (cube, sphere, cylinder)
-3. Adjust parameters (size, position, rotation)
-4. Click "Generate" to create the model
-5. Export to desired format
+2. Open your browser to `http://127.0.0.1:5000`
+3. Select object type (cube, sphere, cylinder, plane)
+4. Adjust parameters using the interactive sliders (size, position)
+5. Click "Generate Model" to create your 3D object
+6. Choose export format and download your model
 
 ### AI-Powered Modeling (Future Feature)
 
@@ -87,7 +91,11 @@ pip install -e ".[dev,ai,advanced-ui,export]"
 ```
 python-blender-ai-modeling/
 ├── src/
-│   ├── ui/                    # User interface modules
+│   ├── web/                   # Web interface (Flask app, templates, static files)
+│   │   ├── templates/         # HTML templates
+│   │   ├── static/js/         # JavaScript controllers
+│   │   └── app.py            # Flask application
+│   ├── api/                   # API business logic
 │   ├── blender_integration/   # Blender API integration
 │   ├── ai_integration/        # AI API integration
 │   └── export/               # Model export functionality
@@ -144,6 +152,12 @@ pip-audit
 Create a `.env` file for configuration:
 
 ```bash
+# Flask Configuration
+FLASK_DEBUG=True
+PORT=5000
+HOST=127.0.0.1
+SECRET_KEY=your-secret-key-here
+
 # AI API Keys (optional)
 ANTHROPIC_API_KEY=your_claude_api_key_here
 OPENAI_API_KEY=your_openai_api_key_here
@@ -154,6 +168,8 @@ BLENDER_EXECUTABLE_PATH=/path/to/blender  # If not in PATH
 # Application Settings
 DEFAULT_EXPORT_FORMAT=obj
 PREVIEW_RESOLUTION=512
+LOG_LEVEL=INFO
+LOG_FILE=blender_ai_modeling.log
 ```
 
 ## Architecture
@@ -168,7 +184,8 @@ PREVIEW_RESOLUTION=512
 ### Technology Stack
 
 - **Python 3.8+**: Core language
-- **Tkinter/PyQt**: User interface framework
+- **Flask**: Web framework for backend API
+- **HTML/CSS/JavaScript**: Frontend with Tailwind CSS styling
 - **Subprocess**: Blender background execution
 - **Requests**: HTTP client for AI APIs
 - **Pytest**: Testing framework

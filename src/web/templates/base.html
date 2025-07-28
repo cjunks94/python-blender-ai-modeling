@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Python Blender AI Modeling{% endblock %}</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'blender-orange': '#f5792a',
+                        'blender-blue': '#0063a0',
+                        'blender-dark': '#1e1e20',
+                        'blender-light': '#f0f0f0'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS -->
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .hover-scale {
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+    </style>
+    
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-gray-50 text-gray-900 antialiased">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <svg class="h-8 w-8 text-blender-orange mr-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                        <h1 class="text-xl font-bold text-gray-900">Blender AI Modeling</h1>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                    </button>
+                    
+                    <button id="help-btn" class="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Status/Notification Area -->
+    <div id="notifications" class="fixed top-20 right-4 z-50 space-y-2"></div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-sm text-gray-500">
+                Python Blender AI Modeling v0.1.0 | Built with ❤️ and AI
+            </p>
+        </div>
+    </footer>
+
+    <!-- Base JavaScript -->
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Python Blender AI Modeling{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="gradient-bg rounded-2xl text-white p-8 mb-8">
+    <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-4xl font-bold mb-4">Create 3D Models with AI</h1>
+        <p class="text-xl opacity-90 mb-6">
+            Generate stunning 3D models using Blender's power combined with AI intelligence
+        </p>
+        <button id="get-started-btn" class="bg-white text-blue-600 font-semibold py-3 px-8 rounded-lg hover-scale shadow-lg">
+            Get Started
+        </button>
+    </div>
+</div>
+
+<!-- Main Dashboard -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Model Creation Panel -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <svg class="h-6 w-6 text-blender-orange mr-2" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                Create 3D Object
+            </h2>
+            
+            <form id="model-form" class="space-y-6">
+                <!-- Object Type Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Object Type</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="object_type" value="cube" checked class="sr-only peer">
+                            <div class="p-4 border-2 border-gray-200 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 transition-colors">
+                                <div class="w-8 h-8 bg-gray-300 mx-auto mb-2 rounded"></div>
+                                <span class="text-sm font-medium">Cube</span>
+                            </div>
+                        </label>
+                        
+                        <label class="cursor-pointer">
+                            <input type="radio" name="object_type" value="sphere" class="sr-only peer">
+                            <div class="p-4 border-2 border-gray-200 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 transition-colors">
+                                <div class="w-8 h-8 bg-gray-300 mx-auto mb-2 rounded-full"></div>
+                                <span class="text-sm font-medium">Sphere</span>
+                            </div>
+                        </label>
+                        
+                        <label class="cursor-pointer">
+                            <input type="radio" name="object_type" value="cylinder" class="sr-only peer">
+                            <div class="p-4 border-2 border-gray-200 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 transition-colors">
+                                <div class="w-8 h-6 bg-gray-300 mx-auto mb-2 rounded-sm"></div>
+                                <span class="text-sm font-medium">Cylinder</span>
+                            </div>
+                        </label>
+                        
+                        <label class="cursor-pointer">
+                            <input type="radio" name="object_type" value="plane" class="sr-only peer">
+                            <div class="p-4 border-2 border-gray-200 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 transition-colors">
+                                <div class="w-8 h-1 bg-gray-300 mx-auto mb-3 rounded"></div>
+                                <span class="text-sm font-medium">Plane</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Parameters -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- Size -->
+                    <div>
+                        <label for="size" class="block text-sm font-medium text-gray-700 mb-2">
+                            Size: <span id="size-value" class="text-blender-orange font-semibold">2.0</span>
+                        </label>
+                        <input type="range" id="size" name="size" min="0.1" max="10" step="0.1" value="2.0" 
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+                        <div class="flex text-xs text-gray-500 mt-1">
+                            <span>0.1</span>
+                            <span class="ml-auto">10.0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Position X -->
+                    <div>
+                        <label for="pos_x" class="block text-sm font-medium text-gray-700 mb-2">
+                            Position X: <span id="pos-x-value" class="text-blender-orange font-semibold">0.0</span>
+                        </label>
+                        <input type="range" id="pos_x" name="pos_x" min="-10" max="10" step="0.1" value="0.0" 
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+                        <div class="flex text-xs text-gray-500 mt-1">
+                            <span>-10</span>
+                            <span class="ml-auto">10</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Generate Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="submit" class="flex-1 bg-blender-orange hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors hover-scale">
+                        <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Generate Model
+                    </button>
+                    
+                    <button type="button" id="ai-generate-btn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors hover-scale">
+                        <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                        AI Generate (Coming Soon)
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Status & Export Panel -->
+    <div class="space-y-6">
+        <!-- Status Panel -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                Status
+            </h3>
+            
+            <div id="status-container" class="space-y-3">
+                <div class="flex items-center text-sm text-gray-600">
+                    <div class="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
+                    Application ready
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <div class="w-2 h-2 bg-yellow-400 rounded-full mr-3"></div>
+                    Waiting for user input
+                </div>
+            </div>
+        </div>
+        
+        <!-- Export Panel -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg class="h-5 w-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Export
+            </h3>
+            
+            <div class="space-y-3">
+                <select id="export-format" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    <option value="obj">OBJ Format</option>
+                    <option value="gltf">GLTF Format</option>
+                    <option value="stl">STL Format</option>
+                </select>
+                
+                <button id="export-btn" disabled class="w-full bg-gray-300 text-gray-500 font-semibold py-2 px-4 rounded-lg cursor-not-allowed">
+                    Export Model
+                </button>
+                
+                <p class="text-xs text-gray-500 text-center">
+                    Generate a model first to enable export
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Modal -->
+<div id="progress-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blender-orange mx-auto mb-4"></div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Generating Model</h3>
+            <p class="text-gray-600 mb-4">Blender is processing your request...</p>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progress-bar" class="bg-blender-orange h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/model-form.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ui-interactions.js') }}"></script>
+{% endblock %}

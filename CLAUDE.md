@@ -8,7 +8,7 @@ You are Claude, an expert senior software engineer specializing in Python develo
 
 ## Project Tech Stack
 
-**Python 3.x**: Use Blender's bpy API via subprocess for background execution (requires Blender installed). UI with Tkinter (simple) or PyQt for more advanced interfaces. For AI stretch goal, integrate APIs like Anthropic Claude or OpenAI GPT. Add libraries only as needed (e.g., subprocess for Blender calls, requests for AI APIs). Focus on modular design: Separate modules for UI, script generation, execution, and exports.
+**Python 3.x with Flask web framework**: Use Blender's bpy API via subprocess for background execution (requires Blender installed). Web UI with HTML templates, Tailwind CSS, and vanilla JavaScript controllers. For AI stretch goal, integrate APIs like Anthropic Claude or OpenAI GPT. Add libraries only as needed (e.g., subprocess for Blender calls, requests for AI APIs, Flask for web server). Focus on modular design: Separate modules for web interface, API logic, script generation, execution, and exports.
 
 ## Development Methodology
 
@@ -53,7 +53,11 @@ Always confirm understanding and ask clarifying questions if needed.
 ```
 python-blender-ai-modeling/
 ├── src/
-│   ├── ui/                    # User interface modules (Tkinter/PyQt)
+│   ├── web/                   # Web interface (Flask app, templates, static files)
+│   │   ├── templates/         # HTML templates
+│   │   ├── static/js/         # JavaScript controllers
+│   │   └── app.py            # Flask application
+│   ├── api/                   # API business logic
 │   ├── blender_integration/   # Blender API integration and subprocess handling
 │   ├── ai_integration/        # AI API integration (Claude, OpenAI)
 │   └── export/               # Model export functionality (OBJ, GLTF)
@@ -61,16 +65,16 @@ python-blender-ai-modeling/
 ├── docs/                     # Documentation
 ├── scripts/                  # Utility scripts
 ├── requirements.txt          # Python dependencies
-└── main.py                   # Application entry point
+└── main.py                   # Application entry point (Flask web server)
 ```
 
 ### Core Components
 
-**UI Layer** (`src/ui/`)
-- Main application window
-- Object creation forms
-- Parameter input controls
-- Preview/feedback display
+**Web Interface** (`src/web/`)
+- Flask application server
+- HTML templates with Tailwind CSS
+- JavaScript controllers for interactions
+- REST API endpoints
 
 **Blender Integration** (`src/blender_integration/`)
 - bpy script generation
@@ -87,7 +91,7 @@ python-blender-ai-modeling/
 **Export Module** (`src/export/`)
 - Model format conversion
 - File I/O operations
-- Preview generation
+- File download handling
 - Format validation
 
 ## Development Commands
@@ -123,8 +127,12 @@ python -m pytest -v
 
 ### Development
 ```bash
-# Run the application
+# Run the web application
 python main.py
+# Access at http://127.0.0.1:5000
+
+# Run with custom port
+PORT=8000 python main.py
 
 # Run linting
 flake8 src/ tests/
@@ -164,7 +172,7 @@ git push -u origin feature/ui-object-creation
 ### Development Dependencies
 - **pytest** - Testing framework
 - **pytest-cov** - Coverage reporting
-- **unittest.mock** (built-in) - Mocking for tests
+- **pytest-mock** - Enhanced mocking for tests
 - **black** - Code formatting
 - **flake8** - Linting
 - **mypy** - Type checking

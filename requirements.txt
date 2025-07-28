@@ -1,16 +1,12 @@
 # Core dependencies
 requests>=2.31.0
-pathlib2>=2.3.7; python_version < "3.4"
+flask>=2.3.0
+werkzeug>=2.3.0
 
 # AI Integration (optional, install as needed)
 # anthropic>=0.7.0
 # openai>=1.0.0
-# python-dotenv>=1.0.0
-
-# UI Framework (choose one)
-# PyQt5>=5.15.0  # For advanced UI
-# PyQt6>=6.5.0   # For advanced UI (alternative)
-# tkinter is built-in with Python
+python-dotenv>=1.0.0
 
 # Export format support
 # Pillow>=10.0.0  # For image preview generation

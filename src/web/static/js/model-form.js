@@ -97,8 +97,27 @@ class ModelFormController {
             
         } catch (error) {
             console.error('Model generation failed:', error);
-            notifications.error(`Generation failed: ${error.message}`);
-            this.updateStatusMessage(`Error: ${error.message}`);
+            
+            // Provide more detailed error information
+            let errorMessage = 'Unknown error occurred';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (typeof error === 'string') {
+                errorMessage = error;
+            } else if (error.error) {
+                errorMessage = error.error;
+            }
+            
+            console.log('Error details:', {
+                message: error.message,
+                stack: error.stack,
+                fullError: error
+            });
+            
+            notifications.error(`Generation failed: ${errorMessage}`, {
+                title: 'Model Generation Error'
+            });
+            this.updateStatusMessage(`Error: ${errorMessage}`);
         } finally {
             this.hideProgressModal();
         }
@@ -158,7 +177,12 @@ class ModelFormController {
             
             const exportResponse = await BlenderAI.API.post('/api/export', {
                 model_id: this.currentModel.id,
-                format: format
+                format: format,
+                model_params: {
+                    object_type: this.currentModel.object_type,
+                    size: this.currentModel.parameters.size,
+                    pos_x: this.currentModel.parameters.pos_x
+                }
             });
             
             // Create download link

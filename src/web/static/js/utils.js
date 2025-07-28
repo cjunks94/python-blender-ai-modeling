@@ -18,16 +18,39 @@ const API = {
         };
         
         try {
+            console.log('Making API request:', { endpoint, config });
             const response = await fetch(endpoint, config);
-            const data = await response.json();
+            
+            console.log('API response received:', {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries())
+            });
+            
+            let data;
+            try {
+                data = await response.json();
+                console.log('API response data:', data);
+            } catch (parseError) {
+                console.error('Failed to parse JSON response:', parseError);
+                throw new Error(`Invalid JSON response from server (${response.status})`);
+            }
             
             if (!response.ok) {
-                throw new Error(data.error || `HTTP ${response.status}`);
+                const errorMessage = data.error || data.message || `HTTP ${response.status}: ${response.statusText}`;
+                console.error('API request failed with error:', errorMessage);
+                throw new Error(errorMessage);
             }
             
             return data;
         } catch (error) {
             console.error('API request failed:', error);
+            
+            // Handle network errors specifically
+            if (error instanceof TypeError && error.message.includes('fetch')) {
+                throw new Error('Network error: Unable to connect to server. Make sure the Flask app is running.');
+            }
+            
             throw error;
         }
     },

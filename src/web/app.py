@@ -6,29 +6,35 @@ This module provides the web interface and API endpoints for the application.
 """
 
 import os
+import sys
 import logging
 from flask import Flask, render_template, request, jsonify, send_file
 from pathlib import Path
 from typing import Dict, Any
+
+# Add parent directory to Python path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import Blender integration
 try:
     from blender_integration.executor import BlenderExecutor, BlenderExecutionError, BlenderScriptError
     from blender_integration.script_generator import ScriptGenerator, ScriptGenerationError
     BLENDER_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     BLENDER_AVAILABLE = False
     BlenderExecutor = None
     ScriptGenerator = None
+    print(f"Warning: Blender integration not available: {e}")
 
 # Import export functionality
 try:
     from export.obj_exporter import OBJExporter, ExportError
     EXPORT_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     EXPORT_AVAILABLE = False
     OBJExporter = None
     ExportError = None
+    print(f"Warning: Export functionality not available: {e}")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

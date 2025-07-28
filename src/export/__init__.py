@@ -1,1 +1,1 @@
-"""Export module for converting models to various formats."""
+"""Export module for 3D model formats."""

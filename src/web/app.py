@@ -21,6 +21,15 @@ except ImportError:
     BlenderExecutor = None
     ScriptGenerator = None
 
+# Import export functionality
+try:
+    from export.obj_exporter import OBJExporter, ExportError
+    EXPORT_AVAILABLE = True
+except ImportError:
+    EXPORT_AVAILABLE = False
+    OBJExporter = None
+    ExportError = None
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,6 +58,13 @@ def create_app(config: Dict[str, Any] = None) -> Flask:
         )
         app.script_generator = ScriptGenerator(clear_scene=True)
     
+    # Initialize export tools if available
+    if EXPORT_AVAILABLE:
+        app.obj_exporter = OBJExporter(
+            blender_path=app.config['BLENDER_PATH'],
+            timeout=app.config['BLENDER_TIMEOUT']
+        )
+    
     if config:
         app.config.update(config)
     
@@ -76,6 +92,7 @@ def register_routes(app: Flask) -> None:
             'version': '0.1.0',
             'blender_path': app.config['BLENDER_PATH'],
             'blender_available': BLENDER_AVAILABLE,
+            'export_available': EXPORT_AVAILABLE,
             'blender_timeout': app.config['BLENDER_TIMEOUT']
         })
     
@@ -139,8 +156,12 @@ def register_routes(app: Flask) -> None:
                 }), 400
             
             try:
-                # Execute Blender script
-                result = app.blender_executor.execute_script(script_content)
+                # Execute Blender script with retry mechanism for resilience
+                result = app.blender_executor.execute_script_with_retry(
+                    script_content, 
+                    max_retries=2, 
+                    retry_delay=1.0
+                )
                 
                 if result.success:
                     model_id = f"model_{data['object_type']}_{int(size*10)}_{int(pos_x*10)}"
@@ -166,17 +187,83 @@ def register_routes(app: Flask) -> None:
                     
             except BlenderExecutionError as e:
                 logger.error(f"Blender execution error: {e}")
-                return jsonify({
+                
+                # Provide user-friendly error messages based on error type
+                error_responses = {
+                    'timeout': {
+                        'error': 'Blender execution timeout',
+                        'message': 'The operation took too long to complete. Please try again or reduce complexity.',
+                        'code': 504
+                    },
+                    'not_found': {
+                        'error': 'Blender not found',
+                        'message': 'Blender executable not found. Please ensure Blender is installed and accessible.',
+                        'code': 503
+                    },
+                    'permission': {
+                        'error': 'Permission denied',
+                        'message': 'Permission denied accessing Blender. Please check file permissions.',
+                        'code': 503
+                    },
+                    'memory': {
+                        'error': 'Insufficient memory',
+                        'message': 'Not enough memory to execute the operation. Please try again or reduce complexity.',
+                        'code': 503
+                    },
+                    'max_retries': {
+                        'error': 'Operation failed after retries',
+                        'message': 'System is experiencing issues. Please try again in a few moments.',
+                        'code': 503
+                    }
+                }
+                
+                error_type = getattr(e, 'error_type', 'execution')
+                error_info = error_responses.get(error_type, {
                     'error': 'Blender execution failed',
-                    'message': str(e)
-                }), 500
+                    'message': str(e),
+                    'code': 500
+                })
+                
+                return jsonify({
+                    'error': error_info['error'],
+                    'message': error_info['message'],
+                    'error_type': error_type
+                }), error_info['code']
             
             except BlenderScriptError as e:
                 logger.error(f"Blender script error: {e}")
-                return jsonify({
+                
+                # Provide user-friendly error messages based on script error type
+                script_error_responses = {
+                    'syntax': {
+                        'error': 'Script syntax error',
+                        'message': 'The generated script has invalid Python syntax. Please try again.',
+                        'code': 400
+                    },
+                    'indentation': {
+                        'error': 'Script indentation error',
+                        'message': 'The generated script has indentation issues. Please try again.',
+                        'code': 400
+                    },
+                    'security': {
+                        'error': 'Security validation failed',
+                        'message': 'The script contains potentially unsafe operations and cannot be executed.',
+                        'code': 403
+                    }
+                }
+                
+                error_type = getattr(e, 'error_type', 'script')
+                error_info = script_error_responses.get(error_type, {
                     'error': 'Invalid Blender script',
-                    'message': str(e)
-                }), 400
+                    'message': str(e),
+                    'code': 400
+                })
+                
+                return jsonify({
+                    'error': error_info['error'],
+                    'message': error_info['message'],
+                    'error_type': error_type
+                }), error_info['code']
             
             except ScriptGenerationError as e:
                 logger.error(f"Script generation error: {e}")
@@ -205,28 +292,71 @@ def register_routes(app: Flask) -> None:
             if 'format' not in data:
                 return jsonify({'error': 'Missing required field: format'}), 400
             
+            if 'model_params' not in data:
+                return jsonify({'error': 'Missing required field: model_params'}), 400
+            
             # Validate format
-            valid_formats = ['obj', 'gltf', 'stl']
+            valid_formats = ['obj']  # Currently only OBJ is supported
             if data['format'] not in valid_formats:
                 return jsonify({'error': f'Invalid format. Must be one of: {valid_formats}'}), 400
             
-            # TODO: Implement actual export functionality
-            # For now, return a mock response
+            # Check if export functionality is available
+            if not EXPORT_AVAILABLE:
+                return jsonify({
+                    'error': 'Export functionality not available',
+                    'message': 'Export module could not be loaded'
+                }), 503
+            
             model_id = data['model_id']
             format_ext = data['format']
-            filename = f"{model_id}.{format_ext}"
+            model_params = data['model_params']
             
-            response = {
-                'model_id': model_id,
-                'format': format_ext,
-                'filename': filename,
-                'download_url': f'/api/download/{filename}',
-                'size': '1.2 KB',  # Mock size
-                'created_at': '2024-01-01T12:00:00Z'
-            }
-            
-            logger.info(f"Exported model {model_id} as {format_ext}")
-            return jsonify(response)
+            try:
+                # Export the model using OBJExporter
+                if format_ext == 'obj':
+                    result = app.obj_exporter.export_obj(model_id, model_params)
+                    
+                    if result.success:
+                        # Convert file size to human readable format
+                        if result.file_size:
+                            if result.file_size < 1024:
+                                size_str = f"{result.file_size} B"
+                            elif result.file_size < 1024 * 1024:
+                                size_str = f"{result.file_size / 1024:.1f} KB"
+                            else:
+                                size_str = f"{result.file_size / (1024 * 1024):.1f} MB"
+                        else:
+                            size_str = "Unknown"
+                        
+                        response = {
+                            'model_id': result.model_id,
+                            'format': result.format,
+                            'filename': Path(result.output_file).name,
+                            'download_url': f'/api/download/{Path(result.output_file).name}',
+                            'size': size_str,
+                            'file_path': result.output_file,
+                            'created_at': '2024-01-01T12:00:00Z'  # TODO: Use actual timestamp
+                        }
+                        
+                        logger.info(f"Successfully exported model {model_id} as {format_ext}")
+                        return jsonify(response)
+                    else:
+                        return jsonify({
+                            'error': 'Export failed',
+                            'message': result.error_message or 'Unknown export error'
+                        }), 500
+                else:
+                    return jsonify({
+                        'error': f'Format {format_ext} not yet implemented',
+                        'message': 'Currently only OBJ export is supported'
+                    }), 501
+                    
+            except ExportError as e:
+                logger.error(f"Export error: {e}")
+                return jsonify({
+                    'error': 'Export failed',
+                    'message': str(e)
+                }), 400
             
         except Exception as e:
             logger.error(f"Export failed: {e}", exc_info=True)
@@ -236,13 +366,31 @@ def register_routes(app: Flask) -> None:
     def download_file(filename: str):
         """Download exported model file."""
         try:
-            # TODO: Implement actual file serving
-            # For now, return a placeholder response
-            return jsonify({
-                'error': 'File download not yet implemented',
-                'filename': filename,
-                'message': 'This will serve the actual exported file in the future'
-            }), 501
+            # Check if export functionality is available
+            if not EXPORT_AVAILABLE:
+                return jsonify({
+                    'error': 'Export functionality not available',
+                    'message': 'Export module could not be loaded'
+                }), 503
+            
+            # Build file path from exporter's output directory
+            file_path = app.obj_exporter.output_dir / filename
+            
+            # Check if file exists
+            if not file_path.exists():
+                return jsonify({
+                    'error': 'File not found',
+                    'filename': filename,
+                    'message': f'The requested file {filename} does not exist'
+                }), 404
+            
+            # Serve the file
+            return send_file(
+                str(file_path),
+                as_attachment=True,
+                download_name=filename,
+                mimetype='application/octet-stream'
+            )
             
         except Exception as e:
             logger.error(f"Download failed: {e}", exc_info=True)

@@ -280,5 +280,140 @@ class TestBlenderExceptions(unittest.TestCase):
         self.assertIsInstance(error, Exception)
 
 
+class TestEnhancedErrorHandling(unittest.TestCase):
+    """Test cases for enhanced error handling and recovery mechanisms."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        from blender_integration.executor import BlenderExecutor
+        self.executor = BlenderExecutor()
+    
+    @patch('subprocess.run')
+    def test_execute_script_permission_denied(self, mock_subprocess):
+        """Test script execution when permission is denied."""
+        from blender_integration.executor import BlenderExecutionError
+        
+        # Setup mock to raise PermissionError
+        mock_subprocess.side_effect = PermissionError("Permission denied")
+        
+        script_content = "import bpy"
+        
+        with self.assertRaises(BlenderExecutionError) as context:
+            self.executor.execute_script(script_content)
+        
+        self.assertIn('permission', str(context.exception).lower())
+    
+    @patch('subprocess.run')
+    def test_execute_script_memory_error(self, mock_subprocess):
+        """Test script execution with memory errors."""
+        from blender_integration.executor import BlenderExecutionError
+        
+        # Setup mock to raise MemoryError
+        mock_subprocess.side_effect = MemoryError("Not enough memory")
+        
+        script_content = "import bpy"
+        
+        with self.assertRaises(BlenderExecutionError) as context:
+            self.executor.execute_script(script_content)
+        
+        self.assertIn('memory', str(context.exception).lower())
+    
+    @patch('subprocess.run')
+    def test_execute_script_with_retry_mechanism(self, mock_subprocess):
+        """Test script execution with retry mechanism for transient failures."""
+        # Setup mock to fail first time, succeed second time
+        mock_subprocess.side_effect = [
+            subprocess.TimeoutExpired('blender', 30),  # First call fails
+            MagicMock(returncode=0, stdout="Success", stderr="")  # Second call succeeds
+        ]
+        
+        script_content = "import bpy"
+        
+        # This should succeed with retry mechanism
+        result = self.executor.execute_script_with_retry(script_content, max_retries=2)
+        
+        self.assertTrue(result.success)
+        self.assertEqual(mock_subprocess.call_count, 2)
+    
+    @patch('subprocess.run')
+    def test_execute_script_max_retries_exceeded(self, mock_subprocess):
+        """Test script execution when max retries are exceeded."""
+        from blender_integration.executor import BlenderExecutionError
+        
+        # Setup mock to always timeout (this creates retryable timeouts)
+        mock_subprocess.side_effect = subprocess.TimeoutExpired('blender', 30)
+        
+        script_content = "import bpy"
+        
+        with self.assertRaises(BlenderExecutionError) as context:
+            self.executor.execute_script_with_retry(script_content, max_retries=2)
+        
+        # The error should mention either max retries or timeout
+        error_msg = str(context.exception).lower()
+        self.assertTrue('max retries' in error_msg or 'timeout' in error_msg)
+        self.assertEqual(mock_subprocess.call_count, 2)  # Should try exactly max_retries times
+    
+    def test_validate_script_with_complex_errors(self):
+        """Test script validation with complex Python errors."""
+        from blender_integration.executor import BlenderScriptError
+        
+        # Test script with actual indentation error - mixing tabs and spaces
+        invalid_script = "import bpy\nif True:\n\tprint('tab')\n    print('spaces')"
+        
+        with self.assertRaises(BlenderScriptError) as context:
+            self.executor.validate_script(invalid_script)
+        
+        # The error should be caught and re-raised as BlenderScriptError
+        error_msg = str(context.exception).lower()
+        self.assertTrue('syntax' in error_msg or 'indentation' in error_msg)
+    
+    def test_validate_script_with_import_errors(self):
+        """Test script validation with import-related issues."""
+        from blender_integration.executor import BlenderScriptError
+        
+        # Test script with potentially dangerous imports
+        dangerous_script = "import os; os.system('rm -rf /')"
+        
+        with self.assertRaises(BlenderScriptError) as context:
+            self.executor.validate_script_security(dangerous_script)
+        
+        self.assertIn('security', str(context.exception).lower())
+    
+    @patch('subprocess.run')
+    def test_execute_script_cleanup_on_failure(self, mock_subprocess):
+        """Test that temporary files are cleaned up even on failure."""
+        # Setup mock to fail
+        mock_subprocess.side_effect = subprocess.TimeoutExpired('blender', 30)
+        from blender_integration.executor import BlenderExecutionError
+        
+        script_content = "import bpy"
+        
+        # Get initial temp file count
+        import tempfile
+        temp_dir = Path(tempfile.gettempdir())
+        initial_py_files = len(list(temp_dir.glob("tmp*.py")))
+        
+        with self.assertRaises(BlenderExecutionError):
+            self.executor.execute_script(script_content)
+        
+        # Check that no additional temp files remain
+        final_py_files = len(list(temp_dir.glob("tmp*.py")))
+        self.assertEqual(initial_py_files, final_py_files)
+    
+    def test_error_categorization(self):
+        """Test that errors are properly categorized for user-friendly messages."""
+        from blender_integration.executor import BlenderExecutionError
+        
+        # Test different error types
+        timeout_error = BlenderExecutionError("Timeout occurred", error_type="timeout")
+        self.assertEqual(timeout_error.error_type, "timeout")
+        
+        permission_error = BlenderExecutionError("Permission denied", error_type="permission")
+        self.assertEqual(permission_error.error_type, "permission")
+        
+        script_error = BlenderExecutionError("Script syntax error", error_type="script")
+        self.assertEqual(script_error.error_type, "script")
+
+
 if __name__ == '__main__':
     unittest.main()

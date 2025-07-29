@@ -46,28 +46,29 @@
         }
         
         /* Collapsible section styles */
-        .section-toggle {
-            @apply w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors;
-        }
-        
-        .section-toggle.expanded {
-            @apply bg-gray-50 dark:bg-gray-700;
-        }
-        
         .section-content {
-            @apply hidden;
+            display: none;
+            transition: all 0.3s ease;
         }
         
         .section-content.expanded {
-            @apply block;
+            display: block;
         }
         
         .toggle-icon {
-            @apply transform transition-transform;
+            transition: transform 0.3s ease;
         }
         
         .toggle-icon.expanded {
-            @apply rotate-180;
+            transform: rotate(180deg);
+        }
+        
+        .section-toggle.expanded {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .dark .section-toggle.expanded {
+            background-color: rgba(255, 255, 255, 0.05);
         }
         
         /* Range slider styles for dark mode */

@@ -234,26 +234,32 @@ class UIController {
     
     setupCollapsibleSections() {
         const sectionToggles = document.querySelectorAll('.section-toggle');
+        console.log('Setting up collapsible sections, found:', sectionToggles.length);
         
         sectionToggles.forEach(toggle => {
-            toggle.addEventListener('click', () => {
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const section = toggle.getAttribute('data-section');
                 const content = document.getElementById(`${section}-content`);
                 const icon = toggle.querySelector('.toggle-icon');
                 
+                console.log('Toggling section:', section);
+                
                 // Toggle expanded state
-                const isExpanded = toggle.classList.contains('expanded');
+                const isExpanded = content.classList.contains('expanded');
                 
                 if (isExpanded) {
                     // Collapse
                     toggle.classList.remove('expanded');
                     content.classList.remove('expanded');
                     icon.classList.remove('expanded');
+                    console.log('Collapsed section:', section);
                 } else {
                     // Expand
                     toggle.classList.add('expanded');
                     content.classList.add('expanded');
                     icon.classList.add('expanded');
+                    console.log('Expanded section:', section);
                     
                     // Initialize scene management if expanding scene section
                     if (section === 'scene' && window.sceneManager) {
@@ -274,7 +280,7 @@ class UIController {
             const section = toggle.getAttribute('data-section');
             if (savedStates[section]) {
                 // If saved as expanded, trigger click to expand
-                toggle.click();
+                setTimeout(() => toggle.click(), 100);
             }
         });
     }

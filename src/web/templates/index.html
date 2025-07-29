@@ -494,4 +494,41 @@
 <script src="{{ url_for('static', filename='js/ui-interactions.js') }}"></script>
 <script src="{{ url_for('static', filename='js/scene-management.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ai-integration.js') }}"></script>
+<script>
+// Fallback collapsible sections handler
+document.addEventListener('DOMContentLoaded', function() {
+    // Give the main UI controller a chance to initialize first
+    setTimeout(function() {
+        const toggles = document.querySelectorAll('.section-toggle');
+        console.log('Fallback: Found section toggles:', toggles.length);
+        
+        // Only set up if not already initialized
+        if (toggles.length > 0 && !toggles[0]._listenerAttached) {
+            toggles.forEach(function(toggle) {
+                toggle._listenerAttached = true;
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const section = toggle.getAttribute('data-section');
+                    const content = document.getElementById(section + '-content');
+                    const icon = toggle.querySelector('.toggle-icon');
+                    
+                    if (!content) {
+                        console.error('Content not found for section:', section);
+                        return;
+                    }
+                    
+                    // Toggle classes
+                    toggle.classList.toggle('expanded');
+                    content.classList.toggle('expanded');
+                    icon.classList.toggle('expanded');
+                    
+                    console.log('Fallback toggled section:', section, 'Expanded:', content.classList.contains('expanded'));
+                });
+            });
+        }
+    }, 500);
+});
+</script>
 {% endblock %}

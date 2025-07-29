@@ -18,6 +18,7 @@ class ModelFormController {
         this.setupSliderUpdates();
         this.setupObjectTypeSelection();
         this.setupAIGeneration();
+        this.setupMaterialControls();
         
         notifications.info('Model creation form initialized');
     }
@@ -45,6 +46,24 @@ class ModelFormController {
         posXSlider.addEventListener('input', () => {
             posXValue.textContent = parseFloat(posXSlider.value).toFixed(1);
         });
+        
+        // Rotation sliders
+        const rotationSliders = [
+            { id: 'rot_x', valueId: 'rot-x-value' },
+            { id: 'rot_y', valueId: 'rot-y-value' },
+            { id: 'rot_z', valueId: 'rot-z-value' }
+        ];
+        
+        rotationSliders.forEach(slider => {
+            const sliderElement = document.getElementById(slider.id);
+            const valueElement = document.getElementById(slider.valueId);
+            
+            if (sliderElement && valueElement) {
+                sliderElement.addEventListener('input', () => {
+                    valueElement.textContent = `${sliderElement.value}°`;
+                });
+            }
+        });
     }
     
     setupObjectTypeSelection() {
@@ -65,6 +84,50 @@ class ModelFormController {
             notifications.info('AI generation feature coming soon!', {
                 title: 'Future Feature'
             });
+        });
+    }
+    
+    setupMaterialControls() {
+        // Color picker sync
+        const colorPicker = document.getElementById('color');
+        const colorHex = document.getElementById('color-hex');
+        
+        colorPicker.addEventListener('input', () => {
+            colorHex.value = colorPicker.value.toUpperCase();
+        });
+        
+        // Metallic slider
+        const metallicSlider = document.getElementById('metallic');
+        const metallicValue = document.getElementById('metallic-value');
+        
+        metallicSlider.addEventListener('input', () => {
+            metallicValue.textContent = parseFloat(metallicSlider.value).toFixed(1);
+        });
+        
+        // Roughness slider
+        const roughnessSlider = document.getElementById('roughness');
+        const roughnessValue = document.getElementById('roughness-value');
+        
+        roughnessSlider.addEventListener('input', () => {
+            roughnessValue.textContent = parseFloat(roughnessSlider.value).toFixed(1);
+        });
+        
+        // Emission toggle
+        const emissionCheckbox = document.getElementById('emission');
+        const emissionStrengthContainer = document.getElementById('emission-strength-container');
+        const emissionStrengthSlider = document.getElementById('emission-strength');
+        const emissionStrengthValue = document.getElementById('emission-strength-value');
+        
+        emissionCheckbox.addEventListener('change', () => {
+            if (emissionCheckbox.checked) {
+                emissionStrengthContainer.classList.remove('hidden');
+            } else {
+                emissionStrengthContainer.classList.add('hidden');
+            }
+        });
+        
+        emissionStrengthSlider.addEventListener('input', () => {
+            emissionStrengthValue.textContent = parseFloat(emissionStrengthSlider.value).toFixed(1);
         });
     }
     
@@ -127,7 +190,15 @@ class ModelFormController {
         return BlenderAI.FormUtils.validate(this.form, {
             object_type: { required: true },
             size: { required: true, min: 0.1, max: 10 },
-            pos_x: { required: true, min: -10, max: 10 }
+            pos_x: { required: true, min: -10, max: 10 },
+            rot_x: { required: false, min: -180, max: 180 },
+            rot_y: { required: false, min: -180, max: 180 },
+            rot_z: { required: false, min: -180, max: 180 },
+            color: { required: false },
+            metallic: { required: false, min: 0, max: 1 },
+            roughness: { required: false, min: 0, max: 1 },
+            emission: { required: false },
+            emission_strength: { required: false, min: 0, max: 10 }
         });
     }
     

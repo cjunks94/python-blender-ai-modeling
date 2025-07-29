@@ -8,6 +8,7 @@ This module provides the web interface and API endpoints for the application.
 import os
 import sys
 import logging
+import math
 from flask import Flask, render_template, request, jsonify, send_file
 from pathlib import Path
 from typing import Dict, Any
@@ -141,9 +142,55 @@ def register_routes(app: Flask) -> None:
                 
                 if not (-10 <= pos_x <= 10):
                     return jsonify({'error': 'Position X must be between -10 and 10'}), 400
+                
+                # Validate optional rotation parameters
+                rotation = None
+                if any(key in data for key in ['rot_x', 'rot_y', 'rot_z']):
+                    rot_x = float(data.get('rot_x', 0))
+                    rot_y = float(data.get('rot_y', 0))
+                    rot_z = float(data.get('rot_z', 0))
+                    
+                    # Validate rotation ranges (degrees)
+                    if not all(-180 <= r <= 180 for r in [rot_x, rot_y, rot_z]):
+                        return jsonify({'error': 'Rotation values must be between -180 and 180 degrees'}), 400
+                    
+                    # Convert degrees to radians for Blender
+                    rotation = (
+                        math.radians(rot_x),
+                        math.radians(rot_y),
+                        math.radians(rot_z)
+                    )
+                
+                # Validate optional material parameters
+                material = None
+                if any(key in data for key in ['color', 'metallic', 'roughness', 'emission']):
+                    material = {}
+                    
+                    if 'color' in data:
+                        material['color'] = data['color']
+                    
+                    if 'metallic' in data:
+                        metallic = float(data['metallic'])
+                        if not (0 <= metallic <= 1):
+                            return jsonify({'error': 'Metallic value must be between 0 and 1'}), 400
+                        material['metallic'] = metallic
+                    
+                    if 'roughness' in data:
+                        roughness = float(data['roughness'])
+                        if not (0 <= roughness <= 1):
+                            return jsonify({'error': 'Roughness value must be between 0 and 1'}), 400
+                        material['roughness'] = roughness
+                    
+                    if data.get('emission', False):
+                        material['emission'] = True
+                        if 'emission_strength' in data:
+                            emission_strength = float(data['emission_strength'])
+                            if not (0 <= emission_strength <= 10):
+                                return jsonify({'error': 'Emission strength must be between 0 and 10'}), 400
+                            material['emission_strength'] = emission_strength
                     
             except (ValueError, TypeError):
-                return jsonify({'error': 'Size and position must be valid numbers'}), 400
+                return jsonify({'error': 'Size, position, and rotation must be valid numbers'}), 400
             
             # Check if Blender integration is available
             if not BLENDER_AVAILABLE:
@@ -157,25 +204,30 @@ def register_routes(app: Flask) -> None:
                 if data['object_type'] == 'cube':
                     script_content = app.script_generator.generate_cube_script(
                         size=size,
-                        position=(pos_x, 0, 0)
+                        position=(pos_x, 0, 0),
+                        rotation=rotation,
+                        material=material
                     )
                 elif data['object_type'] == 'sphere':
                     # For sphere, size represents radius
                     script_content = app.script_generator.generate_sphere_script(
                         radius=size,
-                        position=(pos_x, 0, 0)
+                        position=(pos_x, 0, 0),
+                        rotation=rotation
                     )
                 elif data['object_type'] == 'cylinder':
                     # For cylinder, size represents radius, depth is twice the radius
                     script_content = app.script_generator.generate_cylinder_script(
                         radius=size,
                         depth=size * 2,  # Default height is 2x radius
-                        position=(pos_x, 0, 0)
+                        position=(pos_x, 0, 0),
+                        rotation=rotation
                     )
                 elif data['object_type'] == 'plane':
                     script_content = app.script_generator.generate_plane_script(
                         size=size,
-                        position=(pos_x, 0, 0)
+                        position=(pos_x, 0, 0),
+                        rotation=rotation
                     )
                 else:
                     # This should not happen due to earlier validation
@@ -202,15 +254,31 @@ def register_routes(app: Flask) -> None:
                 if result.success:
                     model_id = f"model_{data['object_type']}_{int(size*10)}_{int(pos_x*10)}"
                     
+                    # Build parameters dict
+                    parameters = {
+                        'size': size,
+                        'pos_x': pos_x
+                    }
+                    
+                    # Add rotation to parameters if provided
+                    if rotation:
+                        parameters['rotation'] = {
+                            'x': round(math.degrees(rotation[0]), 1),
+                            'y': round(math.degrees(rotation[1]), 1),
+                            'z': round(math.degrees(rotation[2]), 1)
+                        }
+                    
+                    # Build message
+                    message = f'Successfully generated {data["object_type"]} with size {size} at position X={pos_x}'
+                    if rotation:
+                        message += f' and rotation X={parameters["rotation"]["x"]}°, Y={parameters["rotation"]["y"]}°, Z={parameters["rotation"]["z"]}°'
+                    
                     response = {
                         'id': model_id,
                         'object_type': data['object_type'],
-                        'parameters': {
-                            'size': size,
-                            'pos_x': pos_x
-                        },
+                        'parameters': parameters,
                         'status': 'generated',
-                        'message': f'Successfully generated {data["object_type"]} with size {size} at position X={pos_x}',
+                        'message': message,
                         'blender_output': result.stdout,
                         'created_at': '2024-01-01T12:00:00Z'  # TODO: Use actual timestamp
                     }

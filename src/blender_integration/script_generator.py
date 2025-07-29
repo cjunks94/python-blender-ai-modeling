@@ -5,7 +5,7 @@ This module provides functionality to generate parametric Blender Python (bpy) s
 for creating 3D objects with proper validation and formatting.
 """
 
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional, Union, Dict
 
 
 class ScriptGenerationError(Exception):
@@ -31,7 +31,8 @@ class ScriptGenerator:
         self, 
         size: float, 
         position: Optional[Tuple[float, float, float]] = None,
-        rotation: Optional[Tuple[float, float, float]] = None
+        rotation: Optional[Tuple[float, float, float]] = None,
+        material: Optional[Dict[str, any]] = None
     ) -> str:
         """
         Generate a Blender Python script to create a cube.
@@ -40,6 +41,7 @@ class ScriptGenerator:
             size: Size of the cube (must be positive)
             position: Position tuple (x, y, z). Uses origin if None.
             rotation: Rotation tuple (x, y, z) in radians. No rotation if None.
+            material: Material properties dictionary. None for default material.
             
         Returns:
             Complete Blender Python script as string
@@ -80,6 +82,10 @@ class ScriptGenerator:
             script_parts.append("")
             script_parts.append("# Apply rotation")
             script_parts.append(f"bpy.context.object.rotation_euler = {self._format_vector(rotation)}")
+        
+        # Add material if specified
+        if material is not None:
+            script_parts.append(self._generate_material_script(material))
         
         # Add success message
         script_parts.append("")
@@ -433,3 +439,87 @@ class ScriptGenerator:
         return """# Clear existing objects
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)"""
+    
+    def _generate_material_script(self, material_props: Optional[Dict[str, any]] = None) -> str:
+        """
+        Generate script to create and apply material to active object.
+        
+        Args:
+            material_props: Dictionary with material properties:
+                - color: RGB tuple or hex string
+                - metallic: Float 0-1
+                - roughness: Float 0-1
+                - emission: Boolean
+                - emission_strength: Float
+                
+        Returns:
+            Script snippet for material creation and application
+        """
+        if not material_props:
+            return ""
+        
+        script_parts = []
+        script_parts.append("\n# Create and apply material")
+        script_parts.append("import bpy")
+        script_parts.append("obj = bpy.context.active_object")
+        script_parts.append("")
+        script_parts.append("# Create new material")
+        script_parts.append("mat = bpy.data.materials.new(name='GeneratedMaterial')")
+        script_parts.append("mat.use_nodes = True")
+        script_parts.append("nodes = mat.node_tree.nodes")
+        script_parts.append("links = mat.node_tree.links")
+        script_parts.append("")
+        script_parts.append("# Clear default nodes")
+        script_parts.append("nodes.clear()")
+        script_parts.append("")
+        script_parts.append("# Add Principled BSDF shader")
+        script_parts.append("bsdf = nodes.new(type='ShaderNodeBsdfPrincipled')")
+        script_parts.append("bsdf.location = (0, 0)")
+        script_parts.append("")
+        
+        # Handle color
+        if 'color' in material_props:
+            color = material_props['color']
+            if isinstance(color, str) and color.startswith('#'):
+                # Convert hex to RGB
+                color = color.lstrip('#')
+                r = int(color[0:2], 16) / 255.0
+                g = int(color[2:4], 16) / 255.0
+                b = int(color[4:6], 16) / 255.0
+                script_parts.append(f"bsdf.inputs['Base Color'].default_value = ({r}, {g}, {b}, 1.0)")
+            elif isinstance(color, (tuple, list)) and len(color) >= 3:
+                script_parts.append(f"bsdf.inputs['Base Color'].default_value = ({color[0]}, {color[1]}, {color[2]}, 1.0)")
+        
+        # Handle metallic
+        if 'metallic' in material_props:
+            script_parts.append(f"bsdf.inputs['Metallic'].default_value = {material_props['metallic']}")
+        
+        # Handle roughness
+        if 'roughness' in material_props:
+            script_parts.append(f"bsdf.inputs['Roughness'].default_value = {material_props['roughness']}")
+        
+        # Handle emission
+        if material_props.get('emission', False):
+            strength = material_props.get('emission_strength', 1.0)
+            script_parts.append("")
+            script_parts.append("# Add emission")
+            script_parts.append(f"bsdf.inputs['Emission Strength'].default_value = {strength}")
+            if 'color' in material_props:
+                # Use same color for emission
+                script_parts.append("bsdf.inputs['Emission Color'].default_value = bsdf.inputs['Base Color'].default_value")
+        
+        script_parts.append("")
+        script_parts.append("# Add output node")
+        script_parts.append("output = nodes.new(type='ShaderNodeOutputMaterial')")
+        script_parts.append("output.location = (300, 0)")
+        script_parts.append("")
+        script_parts.append("# Connect nodes")
+        script_parts.append("links.new(bsdf.outputs['BSDF'], output.inputs['Surface'])")
+        script_parts.append("")
+        script_parts.append("# Apply material to object")
+        script_parts.append("if obj.data.materials:")
+        script_parts.append("    obj.data.materials[0] = mat")
+        script_parts.append("else:")
+        script_parts.append("    obj.data.materials.append(mat)")
+        
+        return "\n".join(script_parts)

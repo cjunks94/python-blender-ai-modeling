@@ -8,17 +8,18 @@ This web application provides an intuitive interface for generating 3D models by
 
 ### Key Features
 
-- **Modern Web UI**: Responsive interface built with HTML, Tailwind CSS, and vanilla JavaScript
-- **AI-Powered Generation**: Natural language 3D model creation using Claude API integration
-- **Multiple Object Types**: Generate cubes, spheres, cylinders, and planes with full parameter control
-- **Real-time Interaction**: Interactive forms with live parameter feedback, rotation controls, and material settings
-- **Blender Integration**: Seamless background execution of Blender scripts via subprocess with enhanced error handling
-- **Model Previews**: Automatic thumbnail generation using Blender's Cycles render engine
-- **Multi-Format Export**: Support for OBJ, GLTF/GLB, and STL formats with direct download
-- **Enhanced Error Handling**: Retry mechanisms, categorized errors, and user-friendly messages
+- **Modern Web UI**: Responsive interface with collapsible sections, dark theme support, and Tailwind CSS
+- **Single Object Creation**: Manual and AI-powered generation of cubes, spheres, cylinders, and planes
+- **Scene Management**: Multi-object scene creation, AI scene generation, and scene composition tools
+- **AI Integration**: Natural language 3D model and scene creation using Claude API
+- **Scene Composition**: Align, distribute, and arrange objects with automated algorithms
+- **Model Previews**: Automatic thumbnail generation with stable composite scene rendering
+- **Multi-Format Export**: Complete scenes, selective objects, or individual objects in OBJ, GLTF/GLB, STL formats
+- **Blender Integration**: Seamless background execution with enhanced error handling and retry mechanisms
+- **Dark Theme**: Complete dark mode support throughout the application
+- **Real-time Interaction**: Live parameter feedback, rotation controls, and material settings
 - **Security-First AI**: Comprehensive validation and safety checks for AI-generated content
-- **Test-Driven Development**: Comprehensive test coverage ensuring reliability and maintainability
-- **Modular Architecture**: Clean separation of web interface, API logic, Blender integration, AI, and export functionality
+- **Modular Architecture**: Clean separation with single responsibility principle across all modules
 
 ## Prerequisites
 
@@ -61,27 +62,26 @@ export ANTHROPIC_API_KEY="your-claude-api-key-here"
 # Or add to .env file: ANTHROPIC_API_KEY=your-claude-api-key-here
 
 # 6. Run the application
-python start_server.py
-# Or: python src/web/app.py
+python main.py
 
 # 7. Open browser to http://127.0.0.1:5001
 ```
 
 **Create your first model:**
 
-**Manual Creation:**
-1. Select object type (cube, sphere, cylinder, or plane)
-2. Adjust size, position, rotation, and material settings
-3. Click "Generate Model"
+**Single Object Creation:**
+1. Open the "Single Object Creation" section
+2. **Manual Mode**: Select object type, adjust parameters, click "Generate Model"
+3. **AI Mode**: Click "AI Generate", describe your model in natural language
 4. View the automatic preview thumbnail
 5. Export in your preferred format (OBJ, GLTF, GLB, STL)
 
-**AI-Powered Creation:**
-1. Click "AI Generate" button
-2. Describe your model: "A shiny metallic sphere for a sci-fi scene"
-3. Choose style and complexity preferences
-4. Let AI interpret and generate your model
-5. View preview and export as desired
+**Scene Management:**
+1. Open the "Scene Management" section
+2. **Create Scenes**: Build multi-object scenes manually or with AI
+3. **AI Scene Generation**: Describe a complete scene: "A modern office desk setup"
+4. **Scene Composition**: Arrange, align, and distribute objects in scenes
+5. **Export Scenes**: Export complete scenes or individual objects
 
 ## Example Gallery
 

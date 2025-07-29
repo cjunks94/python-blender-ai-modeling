@@ -175,7 +175,8 @@ class ScriptGenerator:
         radius: float, 
         position: Optional[Tuple[float, float, float]] = None,
         rotation: Optional[Tuple[float, float, float]] = None,
-        subdivisions: int = 2
+        subdivisions: int = 2,
+        material: Optional[Dict[str, any]] = None
     ) -> str:
         """
         Generate a Blender Python script to create a sphere.
@@ -185,6 +186,7 @@ class ScriptGenerator:
             position: Position tuple (x, y, z). Uses origin if None.
             rotation: Rotation tuple (x, y, z) in radians. No rotation if None.
             subdivisions: Level of detail (1-6, default 2)
+            material: Material properties dictionary. None for default material.
             
         Returns:
             Complete Blender Python script as string
@@ -227,6 +229,10 @@ class ScriptGenerator:
             script_parts.append("# Apply rotation")
             script_parts.append(f"bpy.context.object.rotation_euler = {self._format_vector(rotation)}")
         
+        # Add material if specified
+        if material is not None:
+            script_parts.append(self._generate_material_script(material))
+        
         # Add success message
         script_parts.append("")
         script_parts.append('print("Sphere generated successfully")')
@@ -258,7 +264,8 @@ class ScriptGenerator:
         depth: float,
         position: Optional[Tuple[float, float, float]] = None,
         rotation: Optional[Tuple[float, float, float]] = None,
-        vertices: int = 32
+        vertices: int = 32,
+        material: Optional[Dict[str, any]] = None
     ) -> str:
         """
         Generate a Blender Python script to create a cylinder.
@@ -269,6 +276,7 @@ class ScriptGenerator:
             position: Position tuple (x, y, z). Uses origin if None.
             rotation: Rotation tuple (x, y, z) in radians. No rotation if None.
             vertices: Number of vertices for the circle (8-128, default 32)
+            material: Material properties dictionary. None for default material.
             
         Returns:
             Complete Blender Python script as string
@@ -311,6 +319,10 @@ class ScriptGenerator:
             script_parts.append("")
             script_parts.append("# Apply rotation")
             script_parts.append(f"bpy.context.object.rotation_euler = {self._format_vector(rotation)}")
+        
+        # Add material if specified
+        if material is not None:
+            script_parts.append(self._generate_material_script(material))
         
         # Add success message
         script_parts.append("")
@@ -357,7 +369,8 @@ class ScriptGenerator:
         self, 
         size: float,
         position: Optional[Tuple[float, float, float]] = None,
-        rotation: Optional[Tuple[float, float, float]] = None
+        rotation: Optional[Tuple[float, float, float]] = None,
+        material: Optional[Dict[str, any]] = None
     ) -> str:
         """
         Generate a Blender Python script to create a plane.
@@ -366,6 +379,7 @@ class ScriptGenerator:
             size: Size of the plane (must be positive)
             position: Position tuple (x, y, z). Uses origin if None.
             rotation: Rotation tuple (x, y, z) in radians. No rotation if None.
+            material: Material properties dictionary. None for default material.
             
         Returns:
             Complete Blender Python script as string
@@ -406,6 +420,10 @@ class ScriptGenerator:
             script_parts.append("")
             script_parts.append("# Apply rotation")
             script_parts.append(f"bpy.context.object.rotation_euler = {self._format_vector(rotation)}")
+        
+        # Add material if specified
+        if material is not None:
+            script_parts.append(self._generate_material_script(material))
         
         # Add success message
         script_parts.append("")

@@ -213,7 +213,8 @@ def register_routes(app: Flask) -> None:
                     script_content = app.script_generator.generate_sphere_script(
                         radius=size,
                         position=(pos_x, 0, 0),
-                        rotation=rotation
+                        rotation=rotation,
+                        material=material
                     )
                 elif data['object_type'] == 'cylinder':
                     # For cylinder, size represents radius, depth is twice the radius
@@ -221,13 +222,15 @@ def register_routes(app: Flask) -> None:
                         radius=size,
                         depth=size * 2,  # Default height is 2x radius
                         position=(pos_x, 0, 0),
-                        rotation=rotation
+                        rotation=rotation,
+                        material=material
                     )
                 elif data['object_type'] == 'plane':
                     script_content = app.script_generator.generate_plane_script(
                         size=size,
                         position=(pos_x, 0, 0),
-                        rotation=rotation
+                        rotation=rotation,
+                        material=material
                     )
                 else:
                     # This should not happen due to earlier validation

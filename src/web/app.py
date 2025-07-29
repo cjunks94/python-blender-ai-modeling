@@ -1557,6 +1557,121 @@ def register_routes(app: Flask) -> None:
         except Exception as e:
             logger.error(f"Failed to validate scene {scene_id}: {e}")
             return jsonify({'error': 'Failed to validate scene'}), 500
+    
+    # Scene Export Routes
+    @app.route('/api/scene/<scene_id>/export', methods=['POST'])
+    def export_scene(scene_id):
+        """Export a scene in various formats."""
+        try:
+            # Check if scene export is available
+            if not hasattr(app, 'scene_exporter') or not app.scene_exporter:
+                return jsonify({
+                    'error': 'Export not available',
+                    'message': 'Scene export functionality is not initialized'
+                }), 503
+            
+            data = request.get_json() or {}
+            export_type = data.get('export_type', 'complete')  # 'complete', 'selective', 'individual'
+            format = data.get('format', 'obj').lower()
+            object_ids = data.get('object_ids', [])  # For selective export
+            
+            # Validate format
+            if format not in ['obj', 'stl', 'gltf', 'glb']:
+                return jsonify({
+                    'error': 'Invalid format',
+                    'message': f'Format {format} is not supported'
+                }), 400
+            
+            # Load the scene
+            scene = app.scene_manager.load_scene(scene_id)
+            if not scene:
+                return jsonify({
+                    'error': 'Scene not found',
+                    'message': f'Scene {scene_id} does not exist'
+                }), 404
+            
+            # Handle different export types
+            if export_type == 'complete':
+                logger.info(f"Exporting complete scene {scene_id} as {format}")
+                result = app.scene_exporter.export_complete_scene(scene, format)
+                
+            elif export_type == 'selective' and object_ids:
+                logger.info(f"Exporting {len(object_ids)} objects from scene {scene_id} as {format}")
+                combined = data.get('combined', True)
+                result = app.scene_exporter.export_selective_objects(
+                    object_ids, scene, format, combined_file=combined
+                )
+                
+            elif export_type == 'individual':
+                # Export a single object
+                object_id = data.get('object_id')
+                if not object_id:
+                    return jsonify({
+                        'error': 'Missing object_id',
+                        'message': 'Individual export requires object_id'
+                    }), 400
+                
+                obj = scene.get_object_by_id(object_id)
+                if not obj:
+                    return jsonify({
+                        'error': 'Object not found',
+                        'message': f'Object {object_id} not found in scene'
+                    }), 404
+                
+                logger.info(f"Exporting individual object {object_id} from scene {scene_id} as {format}")
+                result = app.scene_exporter.export_individual_object(obj, scene, format)
+                
+            else:
+                return jsonify({
+                    'error': 'Invalid export type',
+                    'message': f'Export type {export_type} is not supported'
+                }), 400
+            
+            # Process result
+            if result.success:
+                # Create download URLs for exported files
+                download_urls = []
+                for file_path in result.output_files:
+                    # Copy file to main export directory for download access
+                    from pathlib import Path
+                    import shutil
+                    filename = Path(file_path).name
+                    dest_path = app.obj_exporter.output_dir / filename
+                    shutil.copy2(file_path, dest_path)
+                    download_urls.append(f'/api/download/{filename}')
+                
+                # Format file size
+                if result.total_file_size < 1024:
+                    size_str = f"{result.total_file_size} B"
+                elif result.total_file_size < 1024 * 1024:
+                    size_str = f"{result.total_file_size / 1024:.1f} KB"
+                else:
+                    size_str = f"{result.total_file_size / (1024 * 1024):.1f} MB"
+                
+                return jsonify({
+                    'success': True,
+                    'scene_id': result.scene_id,
+                    'export_type': result.export_type,
+                    'format': result.format,
+                    'exported_objects': result.exported_objects,
+                    'download_urls': download_urls,
+                    'filenames': [Path(f).name for f in result.output_files],
+                    'total_size': size_str,
+                    'object_count': len(result.exported_objects),
+                    'timestamp': result.export_timestamp.isoformat()
+                })
+            else:
+                return jsonify({
+                    'error': 'Export failed',
+                    'message': result.error_message or 'Unknown export error'
+                }), 500
+                
+        except Exception as e:
+            logger.error(f"Scene export error: {str(e)}")
+            return jsonify({
+                'error': 'Export failed',
+                'message': str(e)
+            }), 500
 
 
 def register_error_handlers(app: Flask) -> None:

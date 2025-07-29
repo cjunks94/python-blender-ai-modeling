@@ -194,6 +194,28 @@ class SceneManager {
         }
     }
 
+    updateExportButtonStates(scene) {
+        const exportCompleteBtn = document.getElementById('export-complete-btn');
+        const exportIndividualBtn = document.getElementById('export-individual-btn');
+        const exportSelectiveBtn = document.getElementById('export-selective-btn');
+        const validateBtn = document.getElementById('validate-scene-btn');
+        const previewBtn = document.getElementById('generate-scene-preview-btn');
+
+        if (scene && scene.object_count > 0) {
+            if (exportCompleteBtn) exportCompleteBtn.disabled = false;
+            if (exportIndividualBtn) exportIndividualBtn.disabled = false;
+            if (exportSelectiveBtn) exportSelectiveBtn.disabled = false;
+            if (validateBtn) validateBtn.disabled = false;
+            if (previewBtn) previewBtn.disabled = false;
+        } else {
+            if (exportCompleteBtn) exportCompleteBtn.disabled = true;
+            if (exportIndividualBtn) exportIndividualBtn.disabled = true;
+            if (exportSelectiveBtn) exportSelectiveBtn.disabled = true;
+            if (validateBtn) validateBtn.disabled = true;
+            if (previewBtn) previewBtn.disabled = true;
+        }
+    }
+
     async loadScene(sceneId) {
         if (!sceneId) {
             this.currentScene = null;
@@ -221,6 +243,9 @@ class SceneManager {
     updateSceneDisplay(scene) {
         const sceneDisplay = document.getElementById('scene-display');
         if (!sceneDisplay) return;
+
+        // Update export button states
+        this.updateExportButtonStates(scene);
 
         if (!scene) {
             sceneDisplay.innerHTML = '<p class="text-gray-500">No scene selected</p>';
@@ -545,7 +570,7 @@ class SceneManager {
             this.closeModal();
             this.showLoading('Exporting...');
 
-            const response = await fetch(`/api/scenes/${this.currentScene.scene_id}/export`, {
+            const response = await fetch(`/api/scene/${this.currentScene.scene_id}/export`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -555,8 +580,8 @@ class SceneManager {
 
             const data = await response.json();
 
-            if (data.success) {
-                this.showExportSuccess(data.export_result);
+            if (response.ok && data.success) {
+                this.showExportSuccess(data);
             } else {
                 this.showError(data.error || 'Export failed');
             }
@@ -569,15 +594,16 @@ class SceneManager {
     }
 
     showExportSuccess(exportResult) {
-        const fileList = exportResult.output_files.map(file => 
-            `<li><a href="/api/download/${file.split('/').pop()}" class="text-blue-600 hover:underline">${file.split('/').pop()}</a></li>`
-        ).join('');
+        const fileList = exportResult.download_urls.map((url, index) => {
+            const filename = exportResult.filenames[index];
+            return `<li><a href="${url}" class="text-blue-600 hover:underline" download>${filename}</a></li>`;
+        }).join('');
 
         const successMessage = `
             <div class="export-success">
                 <h3 class="text-lg font-semibold text-green-600 mb-3">Export Successful!</h3>
-                <p class="mb-3">Exported ${exportResult.exported_objects.length} objects in ${exportResult.format.toUpperCase()} format.</p>
-                <p class="text-sm text-gray-600 mb-3">Total file size: ${(exportResult.total_file_size / 1024).toFixed(1)} KB</p>
+                <p class="mb-3">Exported ${exportResult.object_count} objects in ${exportResult.format.toUpperCase()} format.</p>
+                <p class="text-sm text-gray-600 mb-3">Total file size: ${exportResult.total_size}</p>
                 
                 <div class="mb-4">
                     <h4 class="font-medium mb-2">Generated Files:</h4>

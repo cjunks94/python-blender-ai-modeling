@@ -22,7 +22,7 @@ def test_flask_app_startup():
     
     try:
         # Test health endpoint
-        response = requests.get('http://127.0.0.1:5000/api/health', timeout=5)
+        response = requests.get('http://127.0.0.1:5001/api/health', timeout=5)
         
         if response.status_code == 200:
             health = response.json()
@@ -36,7 +36,7 @@ def test_flask_app_startup():
             return False
             
     except requests.exceptions.ConnectionError:
-        print("❌ Cannot connect to Flask app. Make sure it's running on http://127.0.0.1:5000")
+        print("❌ Cannot connect to Flask app. Make sure it's running on http://127.0.0.1:5001")
         return False
     except Exception as e:
         print(f"❌ Health check failed: {e}")
@@ -48,7 +48,7 @@ def test_scene_api_endpoints():
     print("\nTesting Scene Management API Endpoints")
     print("=" * 50)
     
-    base_url = "http://127.0.0.1:5000"
+    base_url = "http://127.0.0.1:5001"
     
     try:
         # Test 1: List scenes (should work even if empty)
@@ -130,7 +130,7 @@ def test_ai_scene_integration():
     print("\nTesting AI Scene Generation Integration")
     print("=" * 50)
     
-    base_url = "http://127.0.0.1:5000"
+    base_url = "http://127.0.0.1:5001"
     
     try:
         # Test AI scene generation
@@ -193,7 +193,7 @@ def test_export_functionality():
     print("\nTesting Scene Export Functionality")
     print("=" * 50)
     
-    base_url = "http://127.0.0.1:5000"
+    base_url = "http://127.0.0.1:5001"
     
     # First create a simple scene for testing exports
     scene_data = {
@@ -345,7 +345,7 @@ def main():
 if __name__ == "__main__":
     print("🔧 Scene Management Integration Tester")
     print("📋 Prerequisites:")
-    print("   1. Flask app should be running on http://127.0.0.1:5000")
+    print("   1. Flask app should be running on http://127.0.0.1:5001")
     print("   2. All dependencies should be installed")
     print("   3. Blender should be available in PATH or configured")
     print("\n⚡ Starting tests...\n")

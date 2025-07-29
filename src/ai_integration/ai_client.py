@@ -34,7 +34,7 @@ class AIResponse:
 class AIClient:
     """Client for interacting with Claude API for 3D model generation."""
     
-    def __init__(self, api_key: Optional[str] = None, model: str = "claude-3-sonnet-20240229"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "claude-3-5-sonnet-20241022"):
         """
         Initialize AI client.
         

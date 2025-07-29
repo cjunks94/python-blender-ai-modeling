@@ -15,8 +15,8 @@ from .scene_models import Scene, SceneObject
 
 # Import existing preview functionality
 try:
-    from ..blender_integration.preview_renderer import PreviewRenderer, PreviewRenderError
-    from ..blender_integration.script_generator import ScriptGenerator
+    from blender_integration.preview_renderer import PreviewRenderer, PreviewRenderError
+    from blender_integration.script_generator import ScriptGenerator
     PREVIEW_AVAILABLE = True
 except ImportError:
     PreviewRenderer = None

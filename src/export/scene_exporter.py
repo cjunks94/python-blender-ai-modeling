@@ -27,8 +27,8 @@ from .stl_exporter import STLExporter
 from .gltf_exporter import GLTFExporter
 
 # Import script generation
-from ..blender_integration.script_generator import ScriptGenerator
-from ..blender_integration.executor import BlenderExecutor
+from blender_integration.script_generator import ScriptGenerator
+from blender_integration.executor import BlenderExecutor
 
 logger = logging.getLogger(__name__)
 

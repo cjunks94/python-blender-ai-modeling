@@ -1,6 +1,6 @@
 # Python Blender AI Modeling
 
-A desktop application for creating and manipulating 3D models using Blender programmatically with AI integration.
+A modern web application for creating and manipulating 3D models using Blender programmatically with AI integration.
 
 ## Overview
 
@@ -9,19 +9,23 @@ This web application provides an intuitive interface for generating 3D models by
 ### Key Features
 
 - **Modern Web UI**: Responsive interface built with HTML, Tailwind CSS, and vanilla JavaScript
-- **Real-time Interaction**: Interactive forms with live parameter feedback and validation
+- **AI-Powered Generation**: Natural language 3D model creation using Claude API integration
+- **Multiple Object Types**: Generate cubes, spheres, cylinders, and planes with full parameter control
+- **Real-time Interaction**: Interactive forms with live parameter feedback, rotation controls, and material settings
 - **Blender Integration**: Seamless background execution of Blender scripts via subprocess with enhanced error handling
-- **Parametric Script Generation**: Automatic generation of bpy scripts for 3D objects with validation
-- **OBJ Export Support**: Export generated models to OBJ format with direct download
+- **Model Previews**: Automatic thumbnail generation using Blender's Cycles render engine
+- **Multi-Format Export**: Support for OBJ, GLTF/GLB, and STL formats with direct download
 - **Enhanced Error Handling**: Retry mechanisms, categorized errors, and user-friendly messages
-- **Test-Driven Development**: 64 comprehensive tests ensuring reliability and maintainability
-- **Modular Architecture**: Clean separation of web interface, API logic, Blender integration, and export functionality
+- **Security-First AI**: Comprehensive validation and safety checks for AI-generated content
+- **Test-Driven Development**: Comprehensive test coverage ensuring reliability and maintainability
+- **Modular Architecture**: Clean separation of web interface, API logic, Blender integration, AI, and export functionality
 
 ## Prerequisites
 
 - Python 3.8 or higher
-- Blender 3.0+ installed and accessible via command line
+- Blender 3.0+ installed and accessible via command line (4.5+ recommended for latest features)
 - Virtual environment support (recommended)
+- **Optional**: Anthropic API key for AI-powered model generation
 
 ### Verifying Blender Installation
 
@@ -52,39 +56,63 @@ pip install -r requirements.txt
 python setup_blender.py
 # This will find Blender and create a .env file
 
-# 5. Run the application
+# 5. Optional: Configure AI (for natural language generation)
+export ANTHROPIC_API_KEY="your-claude-api-key-here"
+# Or add to .env file: ANTHROPIC_API_KEY=your-claude-api-key-here
+
+# 6. Run the application
 python start_server.py
 # Or: python src/web/app.py
 
-# 6. Open browser to http://127.0.0.1:5001
+# 7. Open browser to http://127.0.0.1:5001
 ```
 
 **Create your first model:**
-1. Select "Cube" as object type
-2. Set size to 2.0 and position X to 1.0
+
+**Manual Creation:**
+1. Select object type (cube, sphere, cylinder, or plane)
+2. Adjust size, position, rotation, and material settings
 3. Click "Generate Model"
-4. Export as OBJ and download
+4. View the automatic preview thumbnail
+5. Export in your preferred format (OBJ, GLTF, GLB, STL)
+
+**AI-Powered Creation:**
+1. Click "AI Generate" button
+2. Describe your model: "A shiny metallic sphere for a sci-fi scene"
+3. Choose style and complexity preferences
+4. Let AI interpret and generate your model
+5. View preview and export as desired
 
 ## Example Gallery
 
 ### What You Can Create
 
-**Basic Cube Models**:
-- Small cube (size: 0.5) at origin → `small_cube.obj`
-- Large cube (size: 3.0) offset to the right → `large_offset_cube.obj` 
-- Precise positioning for architectural layouts
+**Primitive Objects**:
+- **Cubes**: Architectural blocks, building components, containers
+- **Spheres**: Planets, balls, decorative orbs, sci-fi elements
+- **Cylinders**: Columns, pipes, towers, mechanical parts
+- **Planes**: Floors, walls, flat surfaces, terrain patches
 
 **Model Parameters**:
-- **Size Range**: 0.1 to 10.0 units
-- **Position X**: -10.0 to 10.0 units (Y and Z at origin currently)
-- **Export Format**: OBJ with proper vertex normals and face definitions
+- **Size Range**: 0.1 to 10.0 units for all object types
+- **Position**: Full 3D positioning (X, Y, Z coordinates: -10 to 10 units)
+- **Rotation**: Complete rotation control (X, Y, Z axes: -180° to 180°)
+- **Materials**: Color selection, metallic/roughness properties, emission effects
+- **Export Formats**: OBJ, GLTF/GLB, STL with proper normals and materials
+
+**AI-Generated Examples**:
+- "A glowing red sphere for a sci-fi scene" → Emissive red sphere with proper glow settings
+- "An ancient stone pillar with weathered texture" → Cylinder with realistic stone materials
+- "A futuristic metallic cube with sharp edges" → High-metallic, low-roughness cube
+- "A wooden table surface" → Plane with wood-like material properties
 
 **Generated Files**:
-All models are exported as standard OBJ files that can be imported into:
-- Blender (for further editing)
-- Unity/Unreal Engine (for game development)
-- 3D printing software (Cura, PrusaSlicer)
-- CAD applications (Fusion 360, SolidWorks)
+All models are exported in industry-standard formats compatible with:
+- **3D Software**: Blender, Maya, 3ds Max, Cinema 4D
+- **Game Engines**: Unity, Unreal Engine, Godot
+- **3D Printing**: Cura, PrusaSlicer, Bambu Studio
+- **CAD Applications**: Fusion 360, SolidWorks, SketchUp
+- **Web/AR/VR**: Three.js, A-Frame, WebXR applications
 
 ## Installation
 
@@ -137,15 +165,18 @@ pip install -e ".[dev,ai,advanced-ui,export]"
    - Open your browser to `http://127.0.0.1:5001`
 
 3. **Create a 3D model**:
-   - Currently supports: **Cube objects**
-   - Adjust parameters:
+   - **Object Types**: Cube, Sphere, Cylinder, Plane
+   - **Manual Mode**: Adjust parameters via sliders and controls
      - **Size**: 0.1 to 10.0 units
-     - **Position X**: -10.0 to 10.0 units
-   - Click "Generate Model" to create your 3D object
+     - **Position**: X, Y, Z coordinates (-10.0 to 10.0 units)
+     - **Rotation**: X, Y, Z rotation (-180° to 180°)
+     - **Materials**: Color picker, metallic/roughness sliders, emission effects
+   - **AI Mode**: Describe your model in natural language
+   - Click "Generate Model" or "AI Generate" to create your 3D object
 
-4. **Export your model**:
-   - After successful generation, use the export functionality
-   - Supported format: **OBJ**
+4. **View and export your model**:
+   - **Preview**: Automatic thumbnail generation with Cycles rendering
+   - **Export Formats**: OBJ, GLTF/GLB, STL
    - Files are saved to `./exports/` directory
    - Download directly through the web interface
 
@@ -189,6 +220,29 @@ curl -X POST http://localhost:5001/api/export \
 curl http://localhost:5001/api/download/my_cube_model.obj -o model.obj
 ```
 
+#### AI Model Generation
+```bash
+curl -X POST http://localhost:5001/api/ai/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "A glowing red sphere for a sci-fi scene",
+    "preferred_style": "creative",
+    "complexity": "medium",
+    "user_level": "intermediate"
+  }'
+```
+
+#### AI Scene Generation (Advanced)
+```bash
+curl -X POST http://localhost:5001/api/ai/scene \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "A modern office desk setup",
+    "max_objects": 5,
+    "complexity": "medium"
+  }'
+```
+
 ### Troubleshooting
 
 #### Common Issues
@@ -213,16 +267,33 @@ The application provides detailed error messages for common issues:
 python-blender-ai-modeling/
 ├── src/
 │   ├── web/                   # Web interface (Flask app, templates, static files)
-│   │   ├── templates/         # HTML templates
-│   │   ├── static/js/         # JavaScript controllers
-│   │   └── app.py            # Flask application
-│   ├── api/                   # API business logic
-│   ├── blender_integration/   # Blender API integration
-│   ├── ai_integration/        # AI API integration
-│   └── export/               # Model export functionality
-├── tests/                    # Test modules
+│   │   ├── templates/         # HTML templates (base.html, index.html)
+│   │   ├── static/
+│   │   │   ├── js/           # JavaScript controllers
+│   │   │   │   ├── model-form.js      # Manual model generation
+│   │   │   │   ├── ai-integration.js  # AI-powered generation
+│   │   │   │   └── ui-interactions.js # UI controls and interactions
+│   │   │   └── css/          # Stylesheets (Tailwind CSS)
+│   │   └── app.py            # Flask application with all endpoints
+│   ├── blender_integration/   # Blender API integration and execution
+│   │   ├── executor.py       # Blender subprocess execution
+│   │   ├── script_generator.py # bpy script generation
+│   │   └── preview_renderer.py # Model preview generation
+│   ├── ai_integration/        # AI-powered model generation
+│   │   ├── ai_client.py      # Claude API client
+│   │   ├── model_interpreter.py # AI response interpretation
+│   │   ├── prompt_engineer.py # Prompt optimization
+│   │   └── script_validator.py # Security validation
+│   └── export/               # Multi-format model export
+│       ├── obj_exporter.py   # OBJ format support
+│       ├── gltf_exporter.py  # GLTF/GLB format support
+│       └── stl_exporter.py   # STL format support
+├── tests/                    # Comprehensive test coverage
+├── exports/                  # Generated model files
+├── previews/                 # Model preview thumbnails
 ├── docs/                     # Documentation
-└── scripts/                  # Utility scripts
+├── CLAUDE.md                 # AI assistant guidance
+└── requirements.txt          # Python dependencies
 ```
 
 ### Testing
@@ -281,30 +352,37 @@ pip-audit
 
 ### ✅ **Fully Implemented Features**
 
-- **Web Interface**: Modern, responsive UI built with HTML, Tailwind CSS, and vanilla JavaScript
-- **Object Generation**: Create parametric 3D objects with size and position controls
-  - **Cube**: Adjustable size
-  - **Sphere**: Adjustable radius and subdivisions  
-  - **Cylinder**: Adjustable radius and height
-  - **Plane**: Adjustable size
+- **Modern Web Interface**: Responsive UI built with HTML, Tailwind CSS, and vanilla JavaScript
+- **Multiple Object Types**: Complete support for cubes, spheres, cylinders, and planes
+- **Full Parameter Control**: Size, position (X,Y,Z), rotation (X,Y,Z), and material properties
+- **Material System**: Color picker, metallic/roughness sliders, emission effects with strength control
+- **AI-Powered Generation**: Natural language model creation using Claude API integration
+  - Prompt optimization and style selection
+  - Safety validation and script sanitization
+  - AI reasoning display and user suggestions
+- **Model Previews**: Automatic thumbnail generation using Blender's Cycles render engine
+- **Multi-Format Export**: Support for OBJ, GLTF/GLB, and STL formats
 - **Blender Integration**: Robust subprocess execution with comprehensive error handling
-- **OBJ Export**: Export generated models to OBJ format with automatic file serving
-- **API Endpoints**: Complete REST API for programmatic access
+- **Complete API**: REST endpoints for manual generation, AI generation, and scene planning
+- **Security-First Design**: Comprehensive validation for all AI-generated content
 - **Error Handling**: Categorized errors, retry mechanisms, and user-friendly messages
-- **Testing**: 108 comprehensive tests ensuring reliability across all modules (64 original + 44 new)
+- **Testing**: Comprehensive test coverage ensuring reliability across all modules
 
-### 🚧 **Partially Implemented Features**
+### 🚧 **Advanced Features Ready for Extension**
 
-- **Rotation Controls**: Backend supports rotation, UI controls need to be added
-- **Advanced Parameters**: Backend supports additional parameters (subdivisions, vertices), UI needs expansion
+- **Complex Scene Generation**: Framework implemented, UI needs development
+- **Batch Processing**: Backend architecture supports multiple model generation
+- **Material Suggestions**: AI-powered material recommendations (API ready)
+- **Performance Optimization**: Preview caching system ready for implementation
 
-### 📋 **Ready for Implementation**
+### 📋 **Future Enhancements**
 
-The codebase is architected to easily support:
-- Rotation parameters UI - backend already supports rotation for all objects
-- Material/color selection - framework ready for material properties
-- Additional export formats (GLTF, STL) - export framework is modular
-- Real-time 3D preview - can integrate Three.js for browser-based preview
+The modular architecture easily supports:
+- Real-time 3D preview using Three.js
+- Advanced lighting and camera controls
+- Custom material libraries and presets
+- Model history and user accounts
+- Plugin system for custom object types
 
 ## Configuration
 
@@ -322,6 +400,10 @@ SECRET_KEY=your-secret-key-here     # For session security
 BLENDER_EXECUTABLE_PATH=blender     # Path to Blender executable
 BLENDER_TIMEOUT=30                  # Execution timeout in seconds
 
+# AI Configuration (Optional)
+ANTHROPIC_API_KEY=your-claude-api-key   # Required for AI-powered generation
+# Get your API key from: https://console.anthropic.com/
+
 # Export Configuration
 EXPORT_DIR=./exports               # Directory for exported files
 
@@ -329,11 +411,37 @@ EXPORT_DIR=./exports               # Directory for exported files
 LOG_LEVEL=INFO                     # DEBUG, INFO, WARNING, ERROR
 ```
 
+### AI Setup (Optional)
+
+To enable AI-powered model generation:
+
+1. **Get an Anthropic API Key**:
+   - Visit [Anthropic Console](https://console.anthropic.com/)
+   - Create an account and generate an API key
+   - Note: Claude API usage has costs based on tokens processed
+
+2. **Set up your API key**:
+   ```bash
+   # Option 1: Environment variable (recommended for production)
+   export ANTHROPIC_API_KEY="your-api-key-here"
+   
+   # Option 2: Add to .env file (recommended for development)
+   echo "ANTHROPIC_API_KEY=your-api-key-here" >> .env
+   ```
+
+3. **Verify AI Integration**:
+   - Start the application
+   - Visit `/api/health` - should show `"ai_available": true`
+   - The "AI Generate" button should be enabled in the UI
+
+**Without API Key**: The application works fully in manual mode. The AI Generate button will show "AI Unavailable" if no API key is configured.
+
 **For development**, create a `.env` file in the project root:
 ```bash
 FLASK_DEBUG=True
 BLENDER_TIMEOUT=60
 LOG_LEVEL=DEBUG
+ANTHROPIC_API_KEY=your-api-key-here
 ```
 
 ## Architecture
@@ -377,30 +485,38 @@ LOG_LEVEL=DEBUG
 - [x] Modern web UI with responsive design
 - [x] Blender integration with subprocess execution
 - [x] Enhanced error handling and retry mechanisms
-- [x] Parametric script generation for cube objects
-- [x] OBJ export functionality with file download
-- [x] Comprehensive test coverage (64 tests)
+- [x] Parametric script generation for all primitive objects
+- [x] Multi-format export functionality (OBJ, GLTF/GLB, STL)
+- [x] Comprehensive test coverage
 
-### Phase 2: Enhanced Features (In Progress)
-- [ ] Additional object types (sphere, cylinder, plane)
-- [ ] Advanced parameter controls (rotation, materials)
-- [ ] Real-time model preview
-- [ ] Additional export formats (GLTF, STL)
+### Phase 2: Enhanced Features ✅ **COMPLETED**
+- [x] Multiple object types (cube, sphere, cylinder, plane)
+- [x] Advanced parameter controls (rotation, materials, emission)
+- [x] Model preview thumbnails with Cycles rendering
+- [x] Full material system with metallic/roughness controls
+- [x] Complete UI with live parameter feedback
+
+### Phase 3: AI Integration ✅ **COMPLETED**
+- [x] Natural language processing for model descriptions
+- [x] Claude API integration with security validation
+- [x] Intelligent prompt engineering and optimization
+- [x] AI response interpretation and parameter conversion
+- [x] Safety validation and script sanitization
+- [x] Complete AI generation pipeline
+
+### Phase 4: Advanced Features (Next Priority)
+- [ ] Complex scene generation with multiple objects
+- [ ] Real-time 3D preview using Three.js
 - [ ] Batch processing capabilities
+- [ ] Preview caching for performance optimization
+- [ ] AI-powered material suggestions
 
-### Phase 3: AI Integration (Future)
-- [ ] Natural language processing for model descriptions
-- [ ] AI API integration (Claude/OpenAI)
-- [ ] Intelligent bpy code generation and validation
-- [ ] Smart parameter recommendations
-- [ ] Model suggestion system
-
-### Phase 4: Advanced Features (Future)
+### Phase 5: Enterprise Features (Future)
+- [ ] User authentication and model history
 - [ ] Plugin system for custom object types
 - [ ] Advanced export options and optimization
 - [ ] Community model sharing platform
-- [ ] Performance optimization and caching
-- [ ] Docker containerization
+- [ ] Docker containerization and cloud deployment
 
 ## License
 

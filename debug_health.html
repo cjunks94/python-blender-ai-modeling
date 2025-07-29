@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Health Check</title>
+</head>
+<body>
+    <h1>Debug Health Check</h1>
+    <button onclick="checkHealth()">Check Health</button>
+    <pre id="result"></pre>
+
+    <script>
+    async function checkHealth() {
+        try {
+            const response = await fetch('/api/health');
+            const data = await response.json();
+            document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+            document.getElementById('result').textContent = 'Error: ' + error.message;
+        }
+    }
+    
+    // Auto-check on load
+    checkHealth();
+    </script>
+</body>
+</html>

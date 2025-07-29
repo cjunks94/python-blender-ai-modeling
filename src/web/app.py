@@ -162,24 +162,36 @@ def create_app(config: Dict[str, Any] = None) -> Flask:
             app.scene_manager = SceneManager(scenes_dir)
             app.scene_validator = SceneValidator()
             
-            # Initialize scene preview renderer if available
+            # Initialize scene preview renderer if available (optional)
+            app.scene_preview_renderer = None
             if SCENE_PREVIEW_AVAILABLE:
-                app.scene_preview_renderer = ScenePreviewRenderer(
-                    blender_executable=app.config['BLENDER_PATH']
-                )
+                try:
+                    app.scene_preview_renderer = ScenePreviewRenderer(
+                        blender_executable=app.config['BLENDER_PATH']
+                    )
+                    logger.info("Scene preview renderer initialized")
+                except Exception as e:
+                    logger.warning(f"Scene preview renderer initialization failed: {e}")
+                    globals()['SCENE_PREVIEW_AVAILABLE'] = False
             
-            # Initialize scene exporter if available  
+            # Initialize scene exporter if available (optional)
+            app.scene_exporter = None
             if SCENE_EXPORT_AVAILABLE:
-                exports_dir = Path(__file__).parent.parent.parent / "scene_exports"
-                app.scene_exporter = SceneExporter(
-                    output_dir=exports_dir,
-                    blender_path=app.config['BLENDER_PATH'],
-                    timeout=app.config['BLENDER_TIMEOUT']
-                )
+                try:
+                    exports_dir = Path(__file__).parent.parent.parent / "scene_exports"
+                    app.scene_exporter = SceneExporter(
+                        output_dir=exports_dir,
+                        blender_path=app.config['BLENDER_PATH'],
+                        timeout=app.config['BLENDER_TIMEOUT']
+                    )
+                    logger.info("Scene exporter initialized")
+                except Exception as e:
+                    logger.warning(f"Scene exporter initialization failed: {e}")
+                    globals()['SCENE_EXPORT_AVAILABLE'] = False
             
             logger.info("Scene management initialized successfully")
         except Exception as e:
-            logger.warning(f"Scene management initialization failed: {e}")
+            logger.warning(f"Scene management core initialization failed: {e}")
             globals()['SCENE_MANAGEMENT_AVAILABLE'] = False
     
     if config:

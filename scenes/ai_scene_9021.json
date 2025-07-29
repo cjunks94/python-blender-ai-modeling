@@ -3,7 +3,7 @@
   "name": "Playful Cat in Top Hat",
   "description": "a cat in a hat",
   "composition_notes": "",
-  "created_at": "2025-07-29T12:28:27.758013",
+  "created_at": "2025-07-29T12:29:57.235357",
   "ai_metadata": {},
   "lighting_setup": {},
   "camera_settings": {},
@@ -29,7 +29,7 @@
         "rot_x": 0,
         "rot_y": 0,
         "rot_z": 0,
-        "color": "#D3C4AB",
+        "color": "#C4A484",
         "metallic": 0.0,
         "roughness": 0.8,
         "ai_name": "object_0"
@@ -37,7 +37,7 @@
       "export_ready": true,
       "ai_reasoning": "",
       "preview_url": null,
-      "created_at": "2025-07-29T12:28:29.368414",
+      "created_at": "2025-07-29T12:29:57.890784",
       "relationships": []
     },
     {
@@ -61,7 +61,7 @@
       "export_ready": true,
       "ai_reasoning": "",
       "preview_url": null,
-      "created_at": "2025-07-29T12:28:30.236871",
+      "created_at": "2025-07-29T12:29:58.522226",
       "relationships": []
     },
     {
@@ -85,7 +85,7 @@
       "export_ready": true,
       "ai_reasoning": "",
       "preview_url": null,
-      "created_at": "2025-07-29T12:28:31.002250",
+      "created_at": "2025-07-29T12:29:59.143620",
       "relationships": []
     },
     {
@@ -109,7 +109,7 @@
       "export_ready": true,
       "ai_reasoning": "",
       "preview_url": null,
-      "created_at": "2025-07-29T12:28:31.782946",
+      "created_at": "2025-07-29T12:29:59.748397",
       "relationships": []
     },
     {
@@ -135,7 +135,7 @@
       "export_ready": true,
       "ai_reasoning": "",
       "preview_url": null,
-      "created_at": "2025-07-29T12:28:32.524133",
+      "created_at": "2025-07-29T12:30:00.548003",
       "relationships": []
     }
   ]

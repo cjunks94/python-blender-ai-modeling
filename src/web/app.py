@@ -1248,6 +1248,28 @@ def register_routes(app: Flask) -> None:
             logger.error(f"Failed to get scene {scene_id}: {e}")
             return jsonify({'error': 'Failed to get scene'}), 500
     
+    @app.route('/api/scenes/<scene_id>/load', methods=['POST'])
+    def load_scene(scene_id):
+        """Load a scene from disk."""
+        if not SCENE_MANAGEMENT_AVAILABLE:
+            return jsonify({'error': 'Scene management not available'}), 503
+        
+        try:
+            scene = app.scene_manager.load_scene(scene_id)
+            if scene:
+                return jsonify({
+                    'success': True,
+                    'message': f'Scene loaded successfully',
+                    'scene_id': scene.scene_id,
+                    'name': scene.name,
+                    'object_count': scene.object_count
+                })
+            else:
+                return jsonify({'error': 'Failed to load scene from disk'}), 404
+        except Exception as e:
+            logger.error(f"Failed to load scene {scene_id}: {e}")
+            return jsonify({'error': 'Failed to load scene'}), 500
+    
     @app.route('/api/scenes/<scene_id>/preview', methods=['POST'])
     def generate_scene_preview(scene_id):
         """Generate a preview image for a scene."""
@@ -1260,7 +1282,10 @@ def register_routes(app: Flask) -> None:
         try:
             scene = app.scene_manager.get_scene(scene_id)
             if not scene:
-                return jsonify({'error': 'Scene not found'}), 404
+                # Try to load from disk first
+                scene = app.scene_manager.load_scene(scene_id)
+                if not scene:
+                    return jsonify({'error': 'Scene not found'}), 404
             
             # Check if scene preview renderer is available
             if SCENE_PREVIEW_AVAILABLE and app.scene_preview_renderer:
@@ -1283,22 +1308,175 @@ def register_routes(app: Flask) -> None:
                     return jsonify({'error': 'Failed to generate scene preview'}), 500
             
             elif BLENDER_AVAILABLE and hasattr(app, 'preview_renderer'):
-                # Fallback: Generate simple preview using first object in scene
+                # Fallback: Generate composite preview with all objects in scene
                 if scene.objects:
+                    # Create a composite script that includes all objects
+                    composite_script = """import bpy
+import math
+
+# Clear existing objects
+bpy.ops.object.select_all(action='SELECT')
+bpy.ops.object.delete(use_global=False)
+
+# Composite scene preview
+"""
+                    
+                    # Add each object from the scene
+                    for obj in scene.objects:
+                        params = obj.parameters
+                        object_type = params.get('object_type')
+                        size = params.get('size', 2.0)
+                        position = (
+                            params.get('pos_x', 0),
+                            params.get('pos_y', 0),
+                            params.get('pos_z', 0)
+                        )
+                        
+                        # Convert rotation if present
+                        rotation = None
+                        if any(key in params for key in ['rot_x', 'rot_y', 'rot_z']):
+                            import math
+                            rotation = (
+                                math.radians(params.get('rot_x', 0)),
+                                math.radians(params.get('rot_y', 0)),
+                                math.radians(params.get('rot_z', 0))
+                            )
+                        
+                        # Build material dict if present
+                        material = None
+                        if params.get('color'):
+                            material = {
+                                'color': params.get('color'),
+                                'metallic': params.get('metallic', 0.0),
+                                'roughness': params.get('roughness', 0.5)
+                            }
+                            if params.get('emission'):
+                                material['emission'] = True
+                                material['emission_strength'] = params.get('emission_strength', 1.0)
+                        
+                        # Generate object script based on type
+                        try:
+                            # Create a script generator without clearing scene
+                            object_generator = ScriptGenerator(clear_scene=False)
+                            
+                            if object_type == 'cube':
+                                obj_script = object_generator.generate_cube_script(
+                                    size=size, position=position, rotation=rotation, 
+                                    material=material
+                                )
+                            elif object_type == 'sphere':
+                                obj_script = object_generator.generate_sphere_script(
+                                    radius=size, position=position, rotation=rotation,
+                                    material=material
+                                )
+                            elif object_type == 'cylinder':
+                                obj_script = object_generator.generate_cylinder_script(
+                                    radius=size, depth=size * 2, position=position,
+                                    rotation=rotation, material=material
+                                )
+                            elif object_type == 'plane':
+                                obj_script = object_generator.generate_plane_script(
+                                    size=size, position=position, rotation=rotation,
+                                    material=material
+                                )
+                            else:
+                                continue  # Skip unsupported object types
+                            
+                            # Extract just the object creation part (skip header/footer)
+                            lines = obj_script.split('\n')
+                            object_lines = [line for line in lines 
+                                          if line.strip() 
+                                          and not line.strip().startswith('import ') 
+                                          and not 'Clear existing objects' in line
+                                          and not 'bpy.ops.object.select_all' in line
+                                          and not 'bpy.ops.object.delete' in line
+                                          and not 'save_as_mainfile' in line
+                                          and not line.strip().startswith('print(')]
+                            composite_script += '\n'.join(object_lines) + '\n'
+                            
+                        except Exception as e:
+                            logger.warning(f"Failed to add object {obj.id} to composite: {e}")
+                    
+                    # Add scene setup and camera positioning for better view
+                    composite_script += """
+# Set up camera for scene view
+if 'Camera' not in bpy.data.objects:
+    bpy.ops.object.camera_add(location=(7, -7, 5))
+camera = bpy.data.objects['Camera']
+camera.location = (7, -7, 5)
+camera.rotation_euler = (1.1, 0, 0.785)  # Point at scene center
+    
+# Set up lighting
+if 'Light' not in bpy.data.objects:
+    bpy.ops.object.light_add(type='SUN', location=(4, -4, 6))
+light = bpy.data.objects['Light']
+light.location = (4, -4, 6)
+light.data.energy = 3.0
+
+# Set render settings
+bpy.context.scene.render.engine = 'CYCLES'
+bpy.context.scene.cycles.samples = 32
+
+# Save the file
+bpy.ops.wm.save_as_mainfile(filepath=bpy.data.filepath)
+
+print("Composite scene generated successfully")
+"""
+                    
+                    # Debug: save the composite script
+                    with open(f"debug_composite_{scene_id}.py", "w") as f:
+                        f.write(composite_script)
+                    
+                    # Use the preview renderer with the composite script
+                    preview_id = f"scene_{scene_id}_composite_{int(datetime.now().timestamp())}"
+                    try:
+                        logger.info(f"Executing composite script for scene {scene_id} with {len(scene.objects)} objects")
+                        # Execute the composite script and save to the expected location
+                        temp_blend_path = Path(app.preview_renderer.temp_dir) / f"{preview_id}.blend"
+                        
+                        # Update the script to save to the correct location
+                        composite_script = composite_script.replace(
+                            "bpy.ops.wm.save_as_mainfile(filepath=bpy.data.filepath)",
+                            f"bpy.ops.wm.save_as_mainfile(filepath='{str(temp_blend_path)}')"
+                        )
+                        
+                        result = app.blender_executor.execute_script(composite_script)
+                        
+                        if result.success:
+                            # Now render the preview
+                            logger.info(f"Composite script executed successfully, rendering preview")
+                            preview_result = app.preview_renderer._render_preview_from_blendfile(
+                                temp_blend_path,
+                                Path(app.preview_renderer.preview_dir) / f"{preview_id}_preview.png"
+                            )
+                            
+                            if preview_result.success:
+                                return jsonify({
+                                    'success': True,
+                                    'preview_url': f'/api/preview/{preview_id}_preview.png',
+                                    'scene_id': scene_id,
+                                    'composite': True,
+                                    'object_count': len(scene.objects),
+                                    'message': f'Composite preview generated with {len(scene.objects)} objects'
+                                })
+                            else:
+                                logger.warning(f"Composite preview render failed: {preview_result.error_message}")
+                        else:
+                            logger.warning(f"Composite script execution failed: {result.error_message}")
+                        
+                        # If composite fails, fall back to single object
+                        logger.warning("Using single object fallback for scene preview")
+                        
+                    except Exception as e:
+                        logger.error(f"Composite preview generation failed: {e}")
+                    
+                    # Ultimate fallback: just render first object
                     first_object = scene.objects[0]
                     preview_params = {
-                        'object_type': first_object.object_type,
+                        'object_type': first_object.parameters.get('object_type'),
                         'size': first_object.parameters.get('size', 2.0),
-                        'pos_x': 0.0  # Center for preview
+                        'pos_x': 0.0
                     }
-                    
-                    # Add material properties if available
-                    if first_object.parameters.get('color'):
-                        preview_params['color'] = first_object.parameters['color']
-                    if first_object.parameters.get('metallic') is not None:
-                        preview_params['metallic'] = first_object.parameters['metallic']
-                    if first_object.parameters.get('roughness') is not None:
-                        preview_params['roughness'] = first_object.parameters['roughness']
                     
                     preview_id = f"scene_{scene_id}_fallback"
                     preview_result = app.preview_renderer.render_preview(preview_id, preview_params)
@@ -1309,7 +1487,7 @@ def register_routes(app: Flask) -> None:
                             'preview_url': f'/api/preview/{preview_id}_preview.png',
                             'scene_id': scene_id,
                             'fallback': True,
-                            'message': 'Simple preview generated using first object'
+                            'message': 'Simple preview generated using first object only'
                         })
                     else:
                         return jsonify({

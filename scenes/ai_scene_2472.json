@@ -1,0 +1,142 @@
+{
+  "scene_id": "ai_scene_2472",
+  "name": "Cozy Cat Corner",
+  "description": "cat",
+  "composition_notes": "",
+  "created_at": "2025-07-29T00:13:54.442948",
+  "ai_metadata": {},
+  "lighting_setup": {},
+  "camera_settings": {},
+  "scene_bounds": {
+    "min_x": -20.0,
+    "max_x": 20.0,
+    "min_y": -20.0,
+    "max_y": 20.0,
+    "min_z": -20.0,
+    "max_z": 20.0
+  },
+  "objects": [
+    {
+      "id": "object_0",
+      "name": "Object 1",
+      "object_type": "sphere",
+      "parameters": {
+        "object_type": "sphere",
+        "size": 1.2,
+        "pos_x": 0.0,
+        "pos_y": 0.5,
+        "pos_z": 0.0,
+        "rot_x": 0,
+        "rot_y": 0,
+        "rot_z": 15,
+        "color": "#8B7355",
+        "metallic": 0.0,
+        "roughness": 0.8,
+        "ai_name": "object_0"
+      },
+      "export_ready": true,
+      "ai_reasoning": "",
+      "preview_url": null,
+      "created_at": "2025-07-29T00:13:55.125242",
+      "relationships": []
+    },
+    {
+      "id": "object_1",
+      "name": "Object 2",
+      "object_type": "cylinder",
+      "parameters": {
+        "object_type": "cylinder",
+        "size": 2.0,
+        "pos_x": 0.0,
+        "pos_y": 0.15,
+        "pos_z": 0.0,
+        "rot_x": 0,
+        "rot_y": 0,
+        "rot_z": 0,
+        "color": "#E6D5AC",
+        "metallic": 0.0,
+        "roughness": 0.7,
+        "ai_name": "object_1"
+      },
+      "export_ready": true,
+      "ai_reasoning": "",
+      "preview_url": null,
+      "created_at": "2025-07-29T00:13:55.793006",
+      "relationships": []
+    },
+    {
+      "id": "object_2",
+      "name": "Object 3",
+      "object_type": "cylinder",
+      "parameters": {
+        "object_type": "cylinder",
+        "size": 0.6,
+        "pos_x": -1.5,
+        "pos_y": 0.1,
+        "pos_z": 1.0,
+        "rot_x": 0,
+        "rot_y": 0,
+        "rot_z": 0,
+        "color": "#4B88A2",
+        "metallic": 0.3,
+        "roughness": 0.4,
+        "ai_name": "object_2"
+      },
+      "export_ready": true,
+      "ai_reasoning": "",
+      "preview_url": null,
+      "created_at": "2025-07-29T00:13:56.446039",
+      "relationships": []
+    },
+    {
+      "id": "object_3",
+      "name": "Object 4",
+      "object_type": "sphere",
+      "parameters": {
+        "object_type": "sphere",
+        "size": 0.2,
+        "pos_x": 1.2,
+        "pos_y": 0.1,
+        "pos_z": 0.8,
+        "rot_x": 0,
+        "rot_y": 45,
+        "rot_z": 0,
+        "color": "#A86B4C",
+        "metallic": 0.0,
+        "roughness": 0.9,
+        "ai_name": "object_3"
+      },
+      "export_ready": true,
+      "ai_reasoning": "",
+      "preview_url": null,
+      "created_at": "2025-07-29T00:13:57.102133",
+      "relationships": []
+    },
+    {
+      "id": "object_4",
+      "name": "Object 5",
+      "object_type": "plane",
+      "parameters": {
+        "object_type": "plane",
+        "size": 3.0,
+        "pos_x": -2.0,
+        "pos_y": 2.0,
+        "pos_z": -2.0,
+        "rot_x": 45,
+        "rot_y": 0,
+        "rot_z": 0,
+        "color": "#FFFFFF",
+        "metallic": 0.0,
+        "roughness": 0.1,
+        "emission": "#FFF5E1",
+        "emission_strength": 3.0,
+        "ai_name": "object_4"
+      },
+      "export_ready": true,
+      "ai_reasoning": "",
+      "preview_url": null,
+      "created_at": "2025-07-29T00:13:57.724399",
+      "relationships": []
+    }
+  ]
+}

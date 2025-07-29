@@ -103,6 +103,30 @@ class SceneManager {
             validateSceneBtn.addEventListener('click', () => this.validateScene());
         }
 
+        // AI Scene Generation
+        const aiSceneBtn = document.getElementById('ai-scene-btn');
+        if (aiSceneBtn) {
+            aiSceneBtn.addEventListener('click', () => this.showAISceneModal());
+        }
+
+        const aiSceneModalClose = document.getElementById('ai-scene-modal-close');
+        if (aiSceneModalClose) {
+            aiSceneModalClose.addEventListener('click', () => this.hideAISceneModal());
+        }
+
+        const aiSceneCancelBtn = document.getElementById('ai-scene-cancel-btn');
+        if (aiSceneCancelBtn) {
+            aiSceneCancelBtn.addEventListener('click', () => this.hideAISceneModal());
+        }
+
+        const aiSceneForm = document.getElementById('ai-scene-form');
+        if (aiSceneForm) {
+            aiSceneForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.submitAISceneGeneration();
+            });
+        }
+
         // Object selection in scene view
         document.addEventListener('change', (e) => {
             if (e.target.classList.contains('object-checkbox')) {
@@ -800,6 +824,184 @@ class SceneManager {
         notification.addEventListener('click', () => {
             notification.remove();
         });
+    }
+
+    // AI Scene Generation Methods
+    showAISceneModal() {
+        const modal = document.getElementById('ai-scene-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            
+            // Reset form
+            const form = document.getElementById('ai-scene-form');
+            if (form) {
+                form.reset();
+            }
+            this.hideAISceneStatus();
+            this.hideAIScenePreview();
+        }
+    }
+
+    hideAISceneModal() {
+        const modal = document.getElementById('ai-scene-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    showAISceneStatus(message = 'Processing...', progress = 0) {
+        const statusDiv = document.getElementById('ai-scene-status');
+        const statusText = document.getElementById('ai-scene-status-text');
+        const progressBar = document.getElementById('ai-scene-progress');
+        
+        if (statusDiv) statusDiv.classList.remove('hidden');
+        if (statusText) statusText.textContent = message;
+        if (progressBar) progressBar.style.width = `${progress}%`;
+    }
+
+    hideAISceneStatus() {
+        const statusDiv = document.getElementById('ai-scene-status');
+        if (statusDiv) statusDiv.classList.add('hidden');
+    }
+
+    showAIScenePreview(sceneData) {
+        const previewDiv = document.getElementById('ai-scene-preview');
+        const sceneName = document.getElementById('ai-scene-name');
+        const objectsCount = document.getElementById('ai-scene-objects-count');
+        const generationStatus = document.getElementById('ai-scene-generation-status');
+        const objectsGrid = document.getElementById('ai-scene-objects-grid');
+        const previewImage = document.getElementById('ai-scene-preview-img');
+        const previewImageDiv = document.getElementById('ai-scene-preview-image');
+
+        if (previewDiv) previewDiv.classList.remove('hidden');
+        if (sceneName) sceneName.textContent = sceneData.scene_info?.scene_name || 'AI Generated Scene';
+        if (objectsCount) objectsCount.textContent = `${sceneData.generated_objects || sceneData.total_objects || 0} objects`;
+        if (generationStatus) generationStatus.textContent = sceneData.status || 'Generated';
+
+        // Show preview image if available
+        if (sceneData.preview_url && previewImage && previewImageDiv) {
+            previewImage.src = sceneData.preview_url;
+            previewImageDiv.classList.remove('hidden');
+        }
+
+        // Display objects
+        if (objectsGrid && sceneData.objects) {
+            objectsGrid.innerHTML = sceneData.objects.map(obj => `
+                <div class="flex items-center space-x-2 p-2 bg-white rounded border text-sm">
+                    <span class="text-lg">${this.getObjectIcon(obj.object_type)}</span>
+                    <div>
+                        <div class="font-medium">${obj.name || 'Object'}</div>
+                        <div class="text-xs text-gray-500">${obj.object_type}</div>
+                        <div class="text-xs ${obj.status === 'generated' ? 'text-green-600' : 'text-red-600'}">
+                            ${obj.status || 'planned'}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    hideAIScenePreview() {
+        const previewDiv = document.getElementById('ai-scene-preview');
+        const previewImageDiv = document.getElementById('ai-scene-preview-image');
+        
+        if (previewDiv) previewDiv.classList.add('hidden');
+        if (previewImageDiv) previewImageDiv.classList.add('hidden');
+    }
+
+    async submitAISceneGeneration() {
+        const form = document.getElementById('ai-scene-form');
+        if (!form) return;
+
+        const formData = new FormData(form);
+        const description = formData.get('description')?.trim();
+        
+        if (!description) {
+            this.showError('Please provide a scene description');
+            return;
+        }
+
+        const generateData = {
+            description: description,
+            complexity: formData.get('complexity') || 'medium',
+            max_objects: parseInt(formData.get('max_objects')) || 5,
+            generate_models: formData.get('generate_models') === 'true'
+        };
+
+        const submitBtn = document.getElementById('ai-scene-submit-btn');
+        const originalText = submitBtn?.textContent;
+
+        try {
+            // Disable form
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Generating...';
+            }
+
+            // Show progress
+            this.showAISceneStatus('Processing scene description...', 10);
+
+            const response = await fetch('/api/ai/scene', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(generateData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.scene_id) {
+                // Show completion immediately
+                this.showAISceneStatus('Scene generation complete!', 100);
+                
+                // Show the generated scene data
+                this.showAIScenePreview(data);
+                
+                // Update button text and enable it
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'View Generated Scene';
+                    submitBtn.onclick = () => {
+                        this.hideAISceneModal();
+                        this.loadGeneratedScene(data.scene_id);
+                    };
+                }
+
+                this.showSuccess(data.message || 'Scene generated successfully!');
+
+                // Hide status after showing preview
+                setTimeout(() => this.hideAISceneStatus(), 2000);
+
+            } else {
+                this.showError(data.error || 'Scene generation failed');
+                this.hideAISceneStatus();
+            }
+
+        } catch (error) {
+            console.error('AI scene generation failed:', error);
+            this.showError('Scene generation failed. Please try again.');
+            this.hideAISceneStatus();
+        } finally {
+            // Re-enable form if not already handled in success case
+            if (submitBtn && submitBtn.textContent === 'Generating...') {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        }
+    }
+
+    async loadGeneratedScene(sceneId) {
+        // Select the scene in the dropdown
+        const sceneSelect = document.getElementById('scene-select');
+        if (sceneSelect) {
+            // Refresh scenes list first
+            await this.loadScenesList();
+            
+            // Then select the new scene
+            sceneSelect.value = sceneId;
+            await this.loadScene(sceneId);
+        }
     }
 }
 

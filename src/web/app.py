@@ -903,8 +903,16 @@ def register_routes(app: Flask) -> None:
                     'message': 'AI functionality is not configured or available'
                 }), 503
             
+            # Check if Blender integration is available
+            if not BLENDER_AVAILABLE:
+                return jsonify({
+                    'error': 'Blender integration not available',
+                    'message': 'Blender is required for scene generation'
+                }), 503
+            
             max_objects = min(int(data.get('max_objects', 5)), 8)  # Cap at 8 objects
             complexity = data.get('complexity', 'medium')
+            generate_models = data.get('generate_models', True)  # Whether to actually generate in Blender
             
             try:
                 # Step 1: Enhance prompt for scene generation
@@ -927,26 +935,186 @@ def register_routes(app: Flask) -> None:
                         'message': interpretation.error_message
                     }), 400
                 
-                # For now, return the interpreted scene data
-                # Full scene generation would require orchestrating multiple Blender calls
-                response = {
-                    'scene_id': f"ai_scene_{hash(description) % 10000}",
-                    'source': 'ai_generated',
-                    'description': description,
-                    'scene_info': interpretation.scene_info,
-                    'objects': interpretation.models,
-                    'ai_info': {
-                        'complexity': complexity,
-                        'max_objects': max_objects,
-                        'usage': ai_response.usage
-                    },
-                    'status': 'planned',
-                    'message': f'Scene planned with {len(interpretation.models)} objects. Individual generation required.',
-                    'created_at': '2024-01-01T12:00:00Z'
-                }
+                scene_id = f"ai_scene_{hash(description) % 10000}"
                 
-                logger.info(f"AI scene interpreted successfully with {len(interpretation.models)} objects")
-                return jsonify(response)
+                # Step 4: Create Scene object in Scene Management
+                if generate_models and SCENE_MANAGEMENT_AVAILABLE:
+                    try:
+                        # Create scene using the scene manager
+                        scene = app.scene_manager.create_scene(
+                            name=interpretation.scene_info.get('scene_name', f'AI Scene {scene_id}'),
+                            description=description,
+                            scene_id=scene_id
+                        )
+                        
+                        # Step 5: Generate each object in Blender and add to scene
+                        generated_objects = []
+                        for i, model_params in enumerate(interpretation.models):
+                            try:
+                                # Generate script for this object
+                                object_type = model_params['object_type']
+                                size = model_params['size']
+                                position = (model_params.get('pos_x', 0), model_params.get('pos_y', 0), model_params.get('pos_z', 0))
+                                
+                                # Convert rotation from degrees to radians if present
+                                rotation = None
+                                if any(key in model_params for key in ['rot_x', 'rot_y', 'rot_z']):
+                                    import math
+                                    rotation = (
+                                        math.radians(model_params.get('rot_x', 0)),
+                                        math.radians(model_params.get('rot_y', 0)),
+                                        math.radians(model_params.get('rot_z', 0))
+                                    )
+                                
+                                # Build material dict if present
+                                material = None
+                                if 'color' in model_params:
+                                    material = {
+                                        'color': model_params.get('color', '#888888'),
+                                        'metallic': model_params.get('metallic', 0.0),
+                                        'roughness': model_params.get('roughness', 0.5),
+                                    }
+                                    if model_params.get('emission'):
+                                        material['emission'] = True
+                                        material['emission_strength'] = model_params.get('emission_strength', 1.0)
+                                
+                                # Generate script based on object type
+                                if object_type == 'cube':
+                                    script_content = app.script_generator.generate_cube_script(
+                                        size=size, position=position, rotation=rotation, material=material
+                                    )
+                                elif object_type == 'sphere':
+                                    script_content = app.script_generator.generate_sphere_script(
+                                        radius=size, position=position, rotation=rotation, material=material
+                                    )
+                                elif object_type == 'cylinder':
+                                    script_content = app.script_generator.generate_cylinder_script(
+                                        radius=size, depth=size * 2, position=position, rotation=rotation, material=material
+                                    )
+                                elif object_type == 'plane':
+                                    script_content = app.script_generator.generate_plane_script(
+                                        size=size, position=position, rotation=rotation, material=material
+                                    )
+                                else:
+                                    logger.warning(f"Unsupported object type for scene generation: {object_type}")
+                                    continue
+                                
+                                # Execute Blender script
+                                result = app.blender_executor.execute_script_with_retry(
+                                    script_content, max_retries=2, retry_delay=1.0
+                                )
+                                
+                                if result.success:
+                                    # Create scene object and add to scene
+                                    scene_object = app.scene_manager.create_object_from_ai_params(
+                                        model_params, 
+                                        f"Object {i+1}", 
+                                        ai_response.model_data.get('objects', [{}])[i].get('reasoning', '')
+                                    )
+                                    scene_object.export_ready = True
+                                    
+                                    # Add object to scene
+                                    app.scene_manager.add_object_to_scene(scene_id, scene_object)
+                                    generated_objects.append({
+                                        'id': scene_object.id,
+                                        'name': scene_object.name,
+                                        'object_type': object_type,
+                                        'status': 'generated'
+                                    })
+                                    
+                                    logger.info(f"Generated scene object {i+1}: {object_type}")
+                                else:
+                                    logger.error(f"Failed to generate scene object {i+1}: {result.stderr}")
+                                    generated_objects.append({
+                                        'id': f"failed_obj_{i}",
+                                        'name': f"Object {i+1}",
+                                        'object_type': object_type,
+                                        'status': 'failed',
+                                        'error': result.stderr
+                                    })
+                                    
+                            except Exception as e:
+                                logger.error(f"Error generating scene object {i+1}: {e}")
+                                generated_objects.append({
+                                    'id': f"error_obj_{i}",
+                                    'name': f"Object {i+1}",
+                                    'object_type': model_params.get('object_type', 'unknown'),
+                                    'status': 'error',
+                                    'error': str(e)
+                                })
+                        
+                        # Step 6: Apply spatial relationships if available
+                        if generated_objects:
+                            app.scene_manager.resolve_spatial_relationships(scene_id)
+                        
+                        # Step 7: Generate scene preview if available
+                        preview_url = None
+                        if SCENE_PREVIEW_AVAILABLE and app.scene_preview_renderer:
+                            try:
+                                preview_result = app.scene_preview_renderer.render_scene_preview(
+                                    scene, f"previews/scene_{scene_id}_preview.png"
+                                )
+                                if preview_result:
+                                    preview_url = f'/api/preview/scene_{scene_id}_preview.png'
+                                    logger.info(f"Generated scene preview for {scene_id}")
+                            except Exception as e:
+                                logger.error(f"Scene preview generation failed: {e}")
+                        
+                        # Save scene to disk
+                        app.scene_manager.save_scene(scene_id)
+                        
+                        response = {
+                            'scene_id': scene_id,
+                            'source': 'ai_generated',
+                            'description': description,
+                            'scene_info': interpretation.scene_info,
+                            'objects': generated_objects,
+                            'total_objects': len(interpretation.models),
+                            'generated_objects': len([obj for obj in generated_objects if obj['status'] == 'generated']),
+                            'failed_objects': len([obj for obj in generated_objects if obj['status'] in ['failed', 'error']]),
+                            'ai_info': {
+                                'complexity': complexity,
+                                'max_objects': max_objects,
+                                'usage': ai_response.usage,
+                                'prompt_style': 'creative',  # scene_prompt is a string, not dict
+                                'reasoning': ai_response.model_data.get('composition_notes', '')
+                            },
+                            'preview_url': preview_url,
+                            'status': 'generated',
+                            'message': f'Scene generated with {len([obj for obj in generated_objects if obj["status"] == "generated"])} of {len(interpretation.models)} objects successfully created.',
+                            'created_at': datetime.now().isoformat()
+                        }
+                        
+                        logger.info(f"AI scene generated successfully: {scene_id} with {len(generated_objects)} objects")
+                        return jsonify(response)
+                        
+                    except Exception as e:
+                        logger.error(f"Scene generation failed: {e}")
+                        return jsonify({
+                            'error': 'Scene generation failed',
+                            'message': str(e)
+                        }), 500
+                
+                else:
+                    # Return planning-only response if generation is disabled or scene management unavailable
+                    response = {
+                        'scene_id': scene_id,
+                        'source': 'ai_generated',
+                        'description': description,
+                        'scene_info': interpretation.scene_info,
+                        'objects': interpretation.models,
+                        'ai_info': {
+                            'complexity': complexity,
+                            'max_objects': max_objects,
+                            'usage': ai_response.usage
+                        },
+                        'status': 'planned',
+                        'message': f'Scene planned with {len(interpretation.models)} objects. Use generate_models=true to create in Blender.',
+                        'created_at': datetime.now().isoformat()
+                    }
+                    
+                    logger.info(f"AI scene planned successfully with {len(interpretation.models)} objects")
+                    return jsonify(response)
                 
             except Exception as e:
                 logger.error(f"AI scene generation failed: {e}")

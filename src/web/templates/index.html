@@ -20,8 +20,8 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Model Creation Panel -->
     <div class="lg:col-span-2">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
                 <svg class="h-6 w-6 text-blender-orange mr-2" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
@@ -31,21 +31,21 @@
             <form id="model-form" class="space-y-6">
                 <!-- Object Type Selection -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-3">Object Type</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Object Type</label>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <label class="cursor-pointer">
                             <input type="radio" name="object_type" value="cube" checked class="sr-only peer">
-                            <div class="p-4 border-2 border-gray-200 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 transition-colors">
-                                <div class="w-8 h-8 bg-gray-300 mx-auto mb-2 rounded"></div>
-                                <span class="text-sm font-medium">Cube</span>
+                            <div class="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 transition-colors">
+                                <div class="w-8 h-8 bg-gray-300 dark:bg-gray-600 mx-auto mb-2 rounded"></div>
+                                <span class="text-sm font-medium dark:text-gray-200">Cube</span>
                             </div>
                         </label>
                         
                         <label class="cursor-pointer">
                             <input type="radio" name="object_type" value="sphere" class="sr-only peer">
-                            <div class="p-4 border-2 border-gray-200 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 transition-colors">
-                                <div class="w-8 h-8 bg-gray-300 mx-auto mb-2 rounded-full"></div>
-                                <span class="text-sm font-medium">Sphere</span>
+                            <div class="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 transition-colors">
+                                <div class="w-8 h-8 bg-gray-300 dark:bg-gray-600 mx-auto mb-2 rounded-full"></div>
+                                <span class="text-sm font-medium dark:text-gray-200">Sphere</span>
                             </div>
                         </label>
                         

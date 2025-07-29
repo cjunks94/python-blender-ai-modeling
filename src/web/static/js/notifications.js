@@ -68,16 +68,16 @@ class NotificationSystem {
         notification.id = `notification-${id}`;
         // Add type-specific styling
         const typeStyles = {
-            error: 'bg-red-50 border-red-200',
-            success: 'bg-green-50 border-green-200',
-            warning: 'bg-yellow-50 border-yellow-200',
-            info: 'bg-blue-50 border-blue-200'
+            error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
+            success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
+            warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
+            info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
         };
         
         notification.className = `
             transform translate-x-full opacity-0 transition-all duration-300 ease-in-out
-            max-w-lg w-full ${typeStyles[type] || 'bg-white'} shadow-lg rounded-lg pointer-events-auto 
-            ring-1 ring-black ring-opacity-5 border overflow-hidden
+            max-w-lg w-full ${typeStyles[type] || 'bg-white dark:bg-gray-800'} shadow-lg rounded-lg pointer-events-auto 
+            ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 border overflow-hidden
         `;
         
         const typeConfig = this.getTypeConfig(type);
@@ -89,10 +89,10 @@ class NotificationSystem {
                         ${typeConfig.icon}
                     </div>
                     <div class="ml-3 flex-1 min-w-0 pt-0.5">
-                        <p class="text-sm font-medium text-gray-900">
+                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
                             ${options.title || typeConfig.title}
                         </p>
-                        <p class="mt-1 text-sm text-gray-700 break-words whitespace-pre-wrap">
+                        <p class="mt-1 text-sm text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap">
                             ${this.escapeHtml(message)}
                         </p>
                     </div>

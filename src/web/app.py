@@ -1059,6 +1059,25 @@ def register_routes(app: Flask) -> None:
                                     logger.info(f"Generated scene preview for {scene_id}")
                             except Exception as e:
                                 logger.error(f"Scene preview generation failed: {e}")
+                        elif BLENDER_AVAILABLE and hasattr(app, 'preview_renderer'):
+                            # Fallback: generate preview of the last created object as scene preview
+                            try:
+                                if generated_objects and generated_objects[-1]['status'] == 'generated':
+                                    last_object = generated_objects[-1]
+                                    # Use the last object's parameters for a simple scene preview
+                                    simple_preview_params = {
+                                        'object_type': last_object['object_type'],
+                                        'size': 2.0,  # Standard size for preview
+                                        'pos_x': 0.0   # Centered for preview
+                                    }
+                                    preview_result = app.preview_renderer.render_preview(
+                                        f"scene_{scene_id}_simple", simple_preview_params
+                                    )
+                                    if preview_result.success:
+                                        preview_url = f'/api/preview/scene_{scene_id}_simple_preview.png'
+                                        logger.info(f"Generated simple scene preview for {scene_id}")
+                            except Exception as e:
+                                logger.error(f"Simple scene preview generation failed: {e}")
                         
                         # Save scene to disk
                         app.scene_manager.save_scene(scene_id)
@@ -1232,35 +1251,82 @@ def register_routes(app: Flask) -> None:
     @app.route('/api/scenes/<scene_id>/preview', methods=['POST'])
     def generate_scene_preview(scene_id):
         """Generate a preview image for a scene."""
-        if not SCENE_MANAGEMENT_AVAILABLE or not SCENE_PREVIEW_AVAILABLE:
-            return jsonify({'error': 'Scene preview not available'}), 503
+        if not SCENE_MANAGEMENT_AVAILABLE:
+            return jsonify({'error': 'Scene management not available'}), 503
+        
+        # Allow preview generation even if scene preview renderer is not available
+        # We'll use a fallback method
         
         try:
             scene = app.scene_manager.get_scene(scene_id)
             if not scene:
                 return jsonify({'error': 'Scene not found'}), 404
             
-            # Generate preview filename
-            preview_filename = f"scene_{scene_id}_preview_{int(datetime.now().timestamp())}.png"
-            preview_path = app.scene_preview_renderer.preview_dir / preview_filename
+            # Check if scene preview renderer is available
+            if SCENE_PREVIEW_AVAILABLE and app.scene_preview_renderer:
+                # Generate preview filename
+                preview_filename = f"scene_{scene_id}_preview_{int(datetime.now().timestamp())}.png"
+                preview_path = app.scene_preview_renderer.preview_dir / preview_filename
+                
+                # Generate preview
+                success = app.scene_preview_renderer.render_scene_preview(
+                    scene, str(preview_path)
+                )
+                
+                if success and preview_path.exists():
+                    return jsonify({
+                        'success': True,
+                        'preview_url': f'/api/preview/{preview_filename}',
+                        'scene_id': scene_id
+                    })
+                else:
+                    return jsonify({'error': 'Failed to generate scene preview'}), 500
             
-            # Generate preview
-            success = app.scene_preview_renderer.render_scene_preview(
-                scene, str(preview_path)
-            )
-            
-            if success and preview_path.exists():
-                return jsonify({
-                    'success': True,
-                    'preview_url': f'/api/preview/{preview_filename}',
-                    'scene_id': scene_id
-                })
+            elif BLENDER_AVAILABLE and hasattr(app, 'preview_renderer'):
+                # Fallback: Generate simple preview using first object in scene
+                if scene.objects:
+                    first_object = scene.objects[0]
+                    preview_params = {
+                        'object_type': first_object.object_type,
+                        'size': first_object.parameters.get('size', 2.0),
+                        'pos_x': 0.0  # Center for preview
+                    }
+                    
+                    # Add material properties if available
+                    if first_object.parameters.get('color'):
+                        preview_params['color'] = first_object.parameters['color']
+                    if first_object.parameters.get('metallic') is not None:
+                        preview_params['metallic'] = first_object.parameters['metallic']
+                    if first_object.parameters.get('roughness') is not None:
+                        preview_params['roughness'] = first_object.parameters['roughness']
+                    
+                    preview_id = f"scene_{scene_id}_fallback"
+                    preview_result = app.preview_renderer.render_preview(preview_id, preview_params)
+                    
+                    if preview_result.success:
+                        return jsonify({
+                            'success': True,
+                            'preview_url': f'/api/preview/{preview_id}_preview.png',
+                            'scene_id': scene_id,
+                            'fallback': True,
+                            'message': 'Simple preview generated using first object'
+                        })
+                    else:
+                        return jsonify({
+                            'error': 'Preview generation failed',
+                            'details': preview_result.error_message
+                        }), 500
+                else:
+                    return jsonify({'error': 'Scene has no objects to preview'}), 400
             else:
-                return jsonify({'error': 'Failed to generate scene preview'}), 500
+                return jsonify({
+                    'error': 'Preview functionality not available',
+                    'message': 'Scene preview requires Blender integration'
+                }), 503
                 
         except Exception as e:
             logger.error(f"Failed to generate scene preview: {e}")
-            return jsonify({'error': 'Failed to generate scene preview'}), 500
+            return jsonify({'error': f'Failed to generate scene preview: {str(e)}'}), 500
     
     @app.route('/api/scenes/<scene_id>/export', methods=['POST'])
     def export_scene(scene_id):

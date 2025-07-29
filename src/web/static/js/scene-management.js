@@ -290,6 +290,7 @@ class SceneManager {
                         <button id="generate-preview-btn" class="btn btn-primary mt-4" onclick="sceneManager.generateScenePreview()">
                             Generate Preview
                         </button>
+                        <p class="text-xs text-gray-400 mt-2">Note: Scene preview is currently in development</p>
                     </div>
                 </div>
             </div>
@@ -968,6 +969,11 @@ class SceneManager {
                     };
                 }
 
+                // Auto-load the scene after a short delay to show it immediately
+                setTimeout(() => {
+                    this.loadGeneratedScene(data.scene_id);
+                }, 3000);
+
                 this.showSuccess(data.message || 'Scene generated successfully!');
 
                 // Hide status after showing preview
@@ -1002,6 +1008,56 @@ class SceneManager {
             sceneSelect.value = sceneId;
             await this.loadScene(sceneId);
         }
+    }
+
+    async previewObject(objectId) {
+        // Preview individual object functionality
+        if (!this.currentScene) {
+            this.showError('No scene selected');
+            return;
+        }
+
+        const object = this.currentScene.objects.find(obj => obj.id === objectId);
+        if (!object) {
+            this.showError('Object not found');
+            return;
+        }
+
+        this.showModal('Object Preview', `
+            <div class="text-center">
+                <h4 class="text-lg font-medium mb-4">${object.name}</h4>
+                <p class="text-sm text-gray-600 mb-4">Type: ${object.object_type} | Size: ${object.size}</p>
+                <div class="bg-gray-100 rounded-lg p-8">
+                    <p class="text-gray-500">Individual object preview coming soon</p>
+                </div>
+                <button class="btn btn-primary mt-4" onclick="sceneManager.closeModal()">Close</button>
+            </div>
+        `);
+    }
+
+    async exportIndividualObject(objectId) {
+        // Export individual object functionality
+        if (!this.currentScene) {
+            this.showError('No scene selected');
+            return;
+        }
+
+        const object = this.currentScene.objects.find(obj => obj.id === objectId);
+        if (!object) {
+            this.showError('Object not found');
+            return;
+        }
+
+        // Show export modal for individual object
+        this.showExportModal('individual');
+        
+        // Pre-select the object in the dropdown
+        setTimeout(() => {
+            const objectSelect = document.getElementById('individual-object-select');
+            if (objectSelect) {
+                objectSelect.value = objectId;
+            }
+        }, 100);
     }
 }
 

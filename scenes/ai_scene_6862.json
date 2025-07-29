@@ -1,0 +1,142 @@
+{
+  "scene_id": "ai_scene_6862",
+  "name": "Playful Cat in Top Hat",
+  "description": "cat in hat",
+  "composition_notes": "",
+  "created_at": "2025-07-28T23:58:41.148903",
+  "ai_metadata": {},
+  "lighting_setup": {},
+  "camera_settings": {},
+  "scene_bounds": {
+    "min_x": -20.0,
+    "max_x": 20.0,
+    "min_y": -20.0,
+    "max_y": 20.0,
+    "min_z": -20.0,
+    "max_z": 20.0
+  },
+  "objects": [
+    {
+      "id": "object_0",
+      "name": "Object 1",
+      "object_type": "sphere",
+      "parameters": {
+        "object_type": "sphere",
+        "size": 2.0,
+        "pos_x": 0.0,
+        "pos_y": 1.5,
+        "pos_z": 0.0,
+        "rot_x": 0,
+        "rot_y": 0,
+        "rot_z": 0,
+        "color": "#B5B5B5",
+        "metallic": 0.0,
+        "roughness": 0.8,
+        "ai_name": "object_0"
+      },
+      "export_ready": true,
+      "ai_reasoning": "",
+      "preview_url": null,
+      "created_at": "2025-07-28T23:58:41.853932",
+      "relationships": []
+    },
+    {
+      "id": "object_1",
+      "name": "Object 2",
+      "object_type": "cylinder",
+      "parameters": {
+        "object_type": "cylinder",
+        "size": 1.5,
+        "pos_x": 0.0,
+        "pos_y": 3.0,
+        "pos_z": 0.0,
+        "rot_x": 0,
+        "rot_y": 0,
+        "rot_z": 0,
+        "color": "#1A1A1A",
+        "metallic": 0.2,
+        "roughness": 0.3,
+        "ai_name": "object_1"
+      },
+      "export_ready": true,
+      "ai_reasoning": "",
+      "preview_url": null,
+      "created_at": "2025-07-28T23:58:42.468740",
+      "relationships": []
+    },
+    {
+      "id": "object_2",
+      "name": "Object 3",
+      "object_type": "cube",
+      "parameters": {
+        "object_type": "cube",
+        "size": 4.0,
+        "pos_x": 0.0,
+        "pos_y": -0.5,
+        "pos_z": 0.0,
+        "rot_x": 0,
+        "rot_y": 0,
+        "rot_z": 0,
+        "color": "#8B4513",
+        "metallic": 0.0,
+        "roughness": 0.7,
+        "ai_name": "object_2"
+      },
+      "export_ready": true,
+      "ai_reasoning": "",
+      "preview_url": null,
+      "created_at": "2025-07-28T23:58:43.082723",
+      "relationships": []
+    },
+    {
+      "id": "object_3",
+      "name": "Object 4",
+      "object_type": "cube",
+      "parameters": {
+        "object_type": "cube",
+        "size": 0.5,
+        "pos_x": 0.0,
+        "pos_y": 1.2,
+        "pos_z": 1.0,
+        "rot_x": 0,
+        "rot_y": 45,
+        "rot_z": 0,
+        "color": "#FF0000",
+        "metallic": 0.1,
+        "roughness": 0.5,
+        "ai_name": "object_3"
+      },
+      "export_ready": true,
+      "ai_reasoning": "",
+      "preview_url": null,
+      "created_at": "2025-07-28T23:58:43.671769",
+      "relationships": []
+    },
+    {
+      "id": "object_4",
+      "name": "Object 5",
+      "object_type": "sphere",
+      "parameters": {
+        "object_type": "sphere",
+        "size": 0.1,
+        "pos_x": 3.0,
+        "pos_y": 5.0,
+        "pos_z": 3.0,
+        "rot_x": 0,
+        "rot_y": 0,
+        "rot_z": 0,
+        "color": "#FFFFFF",
+        "metallic": 0.0,
+        "roughness": 0.0,
+        "emission": "#FFFFFF",
+        "emission_strength": 5.0,
+        "ai_name": "object_4"
+      },
+      "export_ready": true,
+      "ai_reasoning": "",
+      "preview_url": null,
+      "created_at": "2025-07-28T23:58:44.275876",
+      "relationships": []
+    }
+  ]
+}

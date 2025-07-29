@@ -76,9 +76,9 @@ class SceneExporter:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         # Initialize format-specific exporters
-        self.obj_exporter = OBJExporter(self.output_dir, blender_path=blender_path, timeout=timeout)
-        self.stl_exporter = STLExporter(self.output_dir, blender_path=blender_path, timeout=timeout)
-        self.gltf_exporter = GLTFExporter(self.output_dir, blender_path=blender_path, timeout=timeout)
+        self.obj_exporter = OBJExporter(output_dir=self.output_dir, blender_path=blender_path, timeout=timeout)
+        self.stl_exporter = STLExporter(output_dir=self.output_dir, blender_path=blender_path, timeout=timeout)
+        self.gltf_exporter = GLTFExporter(output_dir=self.output_dir, blender_path=blender_path, timeout=timeout)
         
         # Initialize script generation
         self.script_generator = ScriptGenerator(clear_scene=True)

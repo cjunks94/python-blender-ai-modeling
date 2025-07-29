@@ -1560,7 +1560,7 @@ def register_routes(app: Flask) -> None:
     
     # Scene Export Routes
     @app.route('/api/scene/<scene_id>/export', methods=['POST'])
-    def export_scene(scene_id):
+    def export_scene_api(scene_id):
         """Export a scene in various formats."""
         try:
             # Check if scene export is available

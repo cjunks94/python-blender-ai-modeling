@@ -218,7 +218,7 @@
                         <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                         </svg>
-                        AI Generate (Coming Soon)
+                        AI Generate
                     </button>
                 </div>
             </form>
@@ -324,9 +324,112 @@
         </div>
     </div>
 </div>
+
+<!-- Scene Management Section -->
+{% include 'scene_management.html' %}
+
+<!-- AI Generation Modal -->
+<div id="ai-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-900 flex items-center">
+                <svg class="h-6 w-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                AI Model Generation
+            </h3>
+            <button id="ai-modal-close" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="ai-form" class="space-y-6">
+            <!-- Description Input -->
+            <div>
+                <label for="ai-description" class="block text-sm font-medium text-gray-700 mb-2">
+                    Describe what you want to create
+                </label>
+                <textarea id="ai-description" name="description" rows="4" 
+                          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          placeholder="Examples:&#10;• A glowing red sphere for a sci-fi scene&#10;• A wooden table with metal legs&#10;• An ancient stone pillar with moss&#10;• A futuristic glowing cube"></textarea>
+                <p class="text-xs text-gray-500 mt-1">Be descriptive! Include materials, colors, style, and purpose.</p>
+            </div>
+            
+            <!-- AI Settings -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label for="ai-style" class="block text-sm font-medium text-gray-700 mb-2">Style</label>
+                    <select id="ai-style" name="preferred_style" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="creative">Creative</option>
+                        <option value="precise">Precise</option>
+                        <option value="artistic">Artistic</option>
+                        <option value="architectural">Architectural</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="ai-complexity" class="block text-sm font-medium text-gray-700 mb-2">Complexity</label>
+                    <select id="ai-complexity" name="complexity" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="simple">Simple</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="complex">Complex</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="ai-user-level" class="block text-sm font-medium text-gray-700 mb-2">Experience</label>
+                    <select id="ai-user-level" name="user_level" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate" selected>Intermediate</option>
+                        <option value="expert">Expert</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- AI Status -->
+            <div id="ai-status" class="hidden p-4 rounded-lg border">
+                <div class="flex items-center">
+                    <div id="ai-spinner" class="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-3"></div>
+                    <span id="ai-status-text" class="text-sm text-gray-700">Processing your description...</span>
+                </div>
+            </div>
+            
+            <!-- AI Info Panel -->
+            <div id="ai-info-panel" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 class="text-sm font-medium text-blue-900 mb-2">AI Interpretation</h4>
+                <div class="space-y-2 text-sm text-blue-800">
+                    <div><strong>Style:</strong> <span id="ai-info-style"></span></div>
+                    <div><strong>Reasoning:</strong> <span id="ai-info-reasoning"></span></div>
+                    <div id="ai-info-suggestions" class="hidden">
+                        <strong>Suggestions:</strong>
+                        <ul id="ai-suggestions-list" class="list-disc list-inside mt-1 space-y-1"></ul>
+                    </div>
+                    <div id="ai-info-warnings" class="hidden">
+                        <strong class="text-orange-700">Warnings:</strong>
+                        <ul id="ai-warnings-list" class="list-disc list-inside mt-1 space-y-1 text-orange-700"></ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-3">
+                <button type="button" id="ai-cancel-btn" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" id="ai-submit-btn" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+                    Generate with AI
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/model-form.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ui-interactions.js') }}"></script>
+<script src="{{ url_for('static', filename='js/scene-management.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ai-integration.js') }}"></script>
 {% endblock %}

@@ -21,6 +21,15 @@ except ImportError:
     RelationshipType = None
     ScenePreviewRenderer = None
 
+# Import scene export functionality
+try:
+    from export import SceneExporter, SceneExportResult, SCENE_EXPORT_AVAILABLE
+    SCENE_EXPORT_AVAILABLE = True
+except ImportError:
+    SCENE_EXPORT_AVAILABLE = False
+    SceneExporter = None
+    SceneExportResult = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -530,3 +539,240 @@ class ModelInterpreter:
         except Exception as e:
             logger.error(f"Thumbnail generation failed: {str(e)}")
             return {}
+    
+    def export_individual_object(self, scene_object: 'SceneObject', scene_context: Optional['Scene'] = None,
+                               format: str = 'obj', custom_filename: Optional[str] = None) -> Optional['SceneExportResult']:
+        """
+        Export a single object from a scene using AI integration.
+        
+        Args:
+            scene_object: Object to export
+            scene_context: Optional scene for context
+            format: Export format ('obj', 'stl', 'gltf')
+            custom_filename: Optional custom filename
+            
+        Returns:
+            SceneExportResult or None if export not available
+        """
+        if not SCENE_EXPORT_AVAILABLE:
+            logger.warning("Scene export functionality not available")
+            return None
+        
+        try:
+            exporter = SceneExporter()
+            result = exporter.export_individual_object(
+                scene_object, scene_context, format, custom_filename
+            )
+            
+            if result.success:
+                logger.info(f"AI-assisted individual object export successful: {scene_object.name}")
+            else:
+                logger.error(f"AI-assisted individual object export failed: {result.error_message}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"AI individual object export failed: {str(e)}")
+            return None
+    
+    def export_selective_objects(self, object_ids: List[str], scene: 'Scene',
+                               format: str = 'obj', combined_file: bool = True,
+                               custom_filename: Optional[str] = None) -> Optional['SceneExportResult']:
+        """
+        Export selected objects from a scene using AI integration.
+        
+        Args:
+            object_ids: List of object IDs to export
+            scene: Scene containing the objects
+            format: Export format ('obj', 'stl', 'gltf')
+            combined_file: If True, export as single file
+            custom_filename: Optional custom filename
+            
+        Returns:
+            SceneExportResult or None if export not available
+        """
+        if not SCENE_EXPORT_AVAILABLE:
+            logger.warning("Scene export functionality not available")
+            return None
+        
+        try:
+            exporter = SceneExporter()
+            result = exporter.export_selective_objects(
+                object_ids, scene, format, combined_file, custom_filename
+            )
+            
+            if result.success:
+                logger.info(f"AI-assisted selective export successful: {len(object_ids)} objects")
+            else:
+                logger.error(f"AI-assisted selective export failed: {result.error_message}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"AI selective export failed: {str(e)}")
+            return None
+    
+    def export_complete_scene(self, scene: 'Scene', format: str = 'obj',
+                            custom_filename: Optional[str] = None) -> Optional['SceneExportResult']:
+        """
+        Export complete scene using AI integration.
+        
+        Args:
+            scene: Scene to export
+            format: Export format ('obj', 'stl', 'gltf')
+            custom_filename: Optional custom filename
+            
+        Returns:
+            SceneExportResult or None if export not available
+        """
+        if not SCENE_EXPORT_AVAILABLE:
+            logger.warning("Scene export functionality not available")
+            return None
+        
+        try:
+            exporter = SceneExporter()
+            result = exporter.export_complete_scene(scene, format, custom_filename)
+            
+            if result.success:
+                logger.info(f"AI-assisted complete scene export successful: {scene.name}")
+            else:
+                logger.error(f"AI-assisted complete scene export failed: {result.error_message}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"AI complete scene export failed: {str(e)}")
+            return None
+    
+    def export_scene_workflow(self, scene: 'Scene', workflow_type: str = 'individual_all',
+                            formats: List[str] = ['obj']) -> List['SceneExportResult']:
+        """
+        Execute a complete export workflow for a scene using AI assistance.
+        
+        Args:
+            scene: Scene to export
+            workflow_type: Type of workflow ('individual_all', 'complete', 'preview_and_export')
+            formats: List of formats to export
+            
+        Returns:
+            List of SceneExportResult objects
+        """
+        if not SCENE_EXPORT_AVAILABLE:
+            logger.warning("Scene export functionality not available")
+            return []
+        
+        try:
+            exporter = SceneExporter()
+            results = []
+            
+            if workflow_type == 'individual_all':
+                # Export each object individually in all requested formats
+                for obj in scene.objects:
+                    for format in formats:
+                        result = exporter.export_individual_object(obj, scene, format)
+                        results.append(result)
+                        
+            elif workflow_type == 'complete':
+                # Export complete scene in all requested formats
+                for format in formats:
+                    result = exporter.export_complete_scene(scene, format)
+                    results.append(result)
+                    
+            elif workflow_type == 'preview_and_export':
+                # Generate preview first, then export
+                if SCENE_PREVIEW_AVAILABLE:
+                    preview_success = self.generate_scene_preview(scene, f"scene_exports/{scene.scene_id}_preview.png")
+                    if preview_success:
+                        logger.info("Generated preview before export")
+                
+                # Export complete scene
+                for format in formats:
+                    result = exporter.export_complete_scene(scene, format)
+                    results.append(result)
+            
+            successful_exports = sum(1 for r in results if r.success)
+            total_exports = len(results)
+            
+            logger.info(f"AI export workflow '{workflow_type}' completed: "
+                       f"{successful_exports}/{total_exports} successful")
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"AI export workflow failed: {str(e)}")
+            return []
+    
+    def suggest_export_strategy(self, scene: 'Scene') -> Dict[str, Any]:
+        """
+        Use AI reasoning to suggest optimal export strategy for a scene.
+        
+        Args:
+            scene: Scene to analyze
+            
+        Returns:
+            Dictionary with export strategy recommendations
+        """
+        try:
+            # Analyze scene composition
+            object_count = scene.object_count
+            object_types = {}
+            for obj in scene.objects:
+                object_types[obj.object_type] = object_types.get(obj.object_type, 0) + 1
+            
+            relationships_count = len(scene.get_all_relationships())
+            bounds = scene.get_scene_bounds()
+            
+            # AI-based strategy suggestions
+            suggestions = {
+                'recommended_workflow': 'complete',
+                'recommended_formats': ['obj'],
+                'export_individual': True,
+                'export_selective': False,
+                'export_complete': True,
+                'reasoning': [],
+                'scene_analysis': {
+                    'object_count': object_count,
+                    'object_types': object_types,
+                    'relationships_count': relationships_count,
+                    'scene_complexity': 'simple'
+                }
+            }
+            
+            # Complex scene analysis
+            if object_count > 5:
+                suggestions['scene_analysis']['scene_complexity'] = 'complex'
+                suggestions['export_individual'] = True
+                suggestions['reasoning'].append("Complex scene with many objects - individual exports recommended")
+            
+            if relationships_count > 0:
+                suggestions['export_complete'] = True
+                suggestions['reasoning'].append("Scene has spatial relationships - complete export preserves composition")
+            
+            # Format recommendations based on object types
+            if 'sphere' in object_types or 'cylinder' in object_types:
+                if 'gltf' not in suggestions['recommended_formats']:
+                    suggestions['recommended_formats'].append('gltf')
+                suggestions['reasoning'].append("Curved objects present - GLTF format recommended for better quality")
+            
+            if object_count <= 2:
+                suggestions['recommended_workflow'] = 'individual_all'
+                suggestions['reasoning'].append("Simple scene - individual exports may be sufficient")
+            
+            # Selective export suggestions
+            if len(object_types) > 2:
+                suggestions['export_selective'] = True
+                suggestions['reasoning'].append("Multiple object types - selective export by category could be useful")
+            
+            logger.info(f"Generated export strategy for scene: {scene.name}")
+            return suggestions
+            
+        except Exception as e:
+            logger.error(f"Export strategy suggestion failed: {str(e)}")
+            return {
+                'recommended_workflow': 'complete',
+                'recommended_formats': ['obj'],
+                'export_individual': True,
+                'export_complete': True,
+                'reasoning': ["Default strategy due to analysis error"],
+                'error': str(e)
+            }

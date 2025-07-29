@@ -242,6 +242,266 @@ class TestScriptGenerator(unittest.TestCase):
         self.assertIn('# Clear existing objects', script)
         self.assertIn('bpy.ops.object.select_all(action=\'SELECT\')', script)
         self.assertIn('bpy.ops.object.delete(use_global=False)', script)
+    
+    # Sphere generation tests
+    def test_generate_sphere_script_basic(self):
+        """Test basic sphere script generation."""
+        script = self.generator.generate_sphere_script(radius=1.5)
+        
+        # Verify script contains expected components
+        self.assertIn('import bpy', script)
+        self.assertIn('primitive_uv_sphere_add', script)
+        self.assertIn('radius=1.5', script)
+        self.assertIn('location=(0, 0, 0)', script)  # Default origin
+        self.assertIn('subdivisions=2', script)  # Default subdivisions
+    
+    def test_generate_sphere_script_with_position(self):
+        """Test sphere script generation with custom position."""
+        script = self.generator.generate_sphere_script(
+            radius=2.0, 
+            position=(1.0, -2.0, 3.0)
+        )
+        
+        self.assertIn('radius=2.0', script)
+        self.assertIn('location=(1.0, -2.0, 3.0)', script)
+    
+    def test_generate_sphere_script_with_subdivisions(self):
+        """Test sphere script generation with custom subdivisions."""
+        script = self.generator.generate_sphere_script(
+            radius=1.0,
+            subdivisions=4
+        )
+        
+        self.assertIn('subdivisions=4', script)
+    
+    def test_generate_sphere_script_validation_invalid_radius(self):
+        """Test sphere script generation with invalid radius parameter."""
+        from blender_integration.script_generator import ScriptGenerationError
+        
+        # Test negative radius
+        with self.assertRaises(ScriptGenerationError):
+            self.generator.generate_sphere_script(radius=-1.0)
+        
+        # Test zero radius
+        with self.assertRaises(ScriptGenerationError):
+            self.generator.generate_sphere_script(radius=0.0)
+    
+    def test_generate_sphere_script_validation_invalid_subdivisions(self):
+        """Test sphere script generation with invalid subdivisions parameter."""
+        from blender_integration.script_generator import ScriptGenerationError
+        
+        # Test subdivisions out of range
+        with self.assertRaises(ScriptGenerationError):
+            self.generator.generate_sphere_script(radius=1.0, subdivisions=0)
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator.generate_sphere_script(radius=1.0, subdivisions=7)
+        
+        # Test non-integer subdivisions
+        with self.assertRaises(ScriptGenerationError):
+            self.generator.generate_sphere_script(radius=1.0, subdivisions=2.5)
+    
+    # Cylinder generation tests
+    def test_generate_cylinder_script_basic(self):
+        """Test basic cylinder script generation."""
+        script = self.generator.generate_cylinder_script(radius=1.0, depth=2.0)
+        
+        # Verify script contains expected components
+        self.assertIn('import bpy', script)
+        self.assertIn('primitive_cylinder_add', script)
+        self.assertIn('radius=1.0', script)
+        self.assertIn('depth=2.0', script)
+        self.assertIn('location=(0, 0, 0)', script)  # Default origin
+        self.assertIn('vertices=32', script)  # Default vertices
+    
+    def test_generate_cylinder_script_with_position(self):
+        """Test cylinder script generation with custom position."""
+        script = self.generator.generate_cylinder_script(
+            radius=0.5, 
+            depth=3.0,
+            position=(-1.0, 2.0, 0.5)
+        )
+        
+        self.assertIn('radius=0.5', script)
+        self.assertIn('depth=3.0', script)
+        self.assertIn('location=(-1.0, 2.0, 0.5)', script)
+    
+    def test_generate_cylinder_script_with_vertices(self):
+        """Test cylinder script generation with custom vertices."""
+        script = self.generator.generate_cylinder_script(
+            radius=1.0,
+            depth=2.0,
+            vertices=64
+        )
+        
+        self.assertIn('vertices=64', script)
+    
+    def test_generate_cylinder_script_validation_invalid_depth(self):
+        """Test cylinder script generation with invalid depth parameter."""
+        from blender_integration.script_generator import ScriptGenerationError
+        
+        # Test negative depth
+        with self.assertRaises(ScriptGenerationError):
+            self.generator.generate_cylinder_script(radius=1.0, depth=-2.0)
+        
+        # Test zero depth
+        with self.assertRaises(ScriptGenerationError):
+            self.generator.generate_cylinder_script(radius=1.0, depth=0.0)
+    
+    def test_generate_cylinder_script_validation_invalid_vertices(self):
+        """Test cylinder script generation with invalid vertices parameter."""
+        from blender_integration.script_generator import ScriptGenerationError
+        
+        # Test vertices out of range
+        with self.assertRaises(ScriptGenerationError):
+            self.generator.generate_cylinder_script(radius=1.0, depth=2.0, vertices=4)
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator.generate_cylinder_script(radius=1.0, depth=2.0, vertices=200)
+        
+        # Test non-integer vertices
+        with self.assertRaises(ScriptGenerationError):
+            self.generator.generate_cylinder_script(radius=1.0, depth=2.0, vertices=32.5)
+    
+    # Plane generation tests
+    def test_generate_plane_script_basic(self):
+        """Test basic plane script generation."""
+        script = self.generator.generate_plane_script(size=2.0)
+        
+        # Verify script contains expected components
+        self.assertIn('import bpy', script)
+        self.assertIn('primitive_plane_add', script)
+        self.assertIn('size=2.0', script)
+        self.assertIn('location=(0, 0, 0)', script)  # Default origin
+    
+    def test_generate_plane_script_with_position(self):
+        """Test plane script generation with custom position."""
+        script = self.generator.generate_plane_script(
+            size=5.0, 
+            position=(0.0, 0.0, -1.0)
+        )
+        
+        self.assertIn('size=5.0', script)
+        self.assertIn('location=(0.0, 0.0, -1.0)', script)
+    
+    def test_generate_plane_script_with_rotation(self):
+        """Test plane script generation with rotation."""
+        import math
+        script = self.generator.generate_plane_script(
+            size=3.0,
+            rotation=(math.pi/2, 0.0, 0.0)  # 90 degrees rotation on X axis
+        )
+        
+        self.assertIn(f'({math.pi/2}, 0.0, 0.0)', script)
+        self.assertIn('bpy.context.object.rotation_euler', script)
+    
+    def test_generate_plane_script_validation_invalid_size(self):
+        """Test plane script generation with invalid size parameter."""
+        from blender_integration.script_generator import ScriptGenerationError
+        
+        # Test negative size
+        with self.assertRaises(ScriptGenerationError):
+            self.generator.generate_plane_script(size=-1.0)
+        
+        # Test zero size
+        with self.assertRaises(ScriptGenerationError):
+            self.generator.generate_plane_script(size=0.0)
+    
+    # Validate radius tests
+    def test_validate_radius_valid(self):
+        """Test radius validation with valid values."""
+        # Should not raise exception
+        self.generator._validate_radius(0.1)
+        self.generator._validate_radius(5.0)
+        self.generator._validate_radius(100.0)
+    
+    def test_validate_radius_invalid(self):
+        """Test radius validation with invalid values."""
+        from blender_integration.script_generator import ScriptGenerationError
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_radius(-1.0)
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_radius(0.0)
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_radius("invalid")
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_radius(None)
+    
+    # Validate depth tests
+    def test_validate_depth_valid(self):
+        """Test depth validation with valid values."""
+        # Should not raise exception
+        self.generator._validate_depth(0.1)
+        self.generator._validate_depth(10.0)
+        self.generator._validate_depth(50)
+    
+    def test_validate_depth_invalid(self):
+        """Test depth validation with invalid values."""
+        from blender_integration.script_generator import ScriptGenerationError
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_depth(-1.0)
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_depth(0.0)
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_depth("invalid")
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_depth(None)
+    
+    # Validate subdivisions tests
+    def test_validate_subdivisions_valid(self):
+        """Test subdivisions validation with valid values."""
+        # Should not raise exception
+        self.generator._validate_subdivisions(1)
+        self.generator._validate_subdivisions(3)
+        self.generator._validate_subdivisions(6)
+    
+    def test_validate_subdivisions_invalid(self):
+        """Test subdivisions validation with invalid values."""
+        from blender_integration.script_generator import ScriptGenerationError
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_subdivisions(0)
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_subdivisions(7)
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_subdivisions(2.5)
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_subdivisions("3")
+    
+    # Validate vertices tests
+    def test_validate_vertices_valid(self):
+        """Test vertices validation with valid values."""
+        # Should not raise exception
+        self.generator._validate_vertices(8)
+        self.generator._validate_vertices(32)
+        self.generator._validate_vertices(128)
+    
+    def test_validate_vertices_invalid(self):
+        """Test vertices validation with invalid values."""
+        from blender_integration.script_generator import ScriptGenerationError
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_vertices(4)
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_vertices(256)
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_vertices(32.5)
+        
+        with self.assertRaises(ScriptGenerationError):
+            self.generator._validate_vertices("32")
 
 
 class TestScriptGenerationError(unittest.TestCase):

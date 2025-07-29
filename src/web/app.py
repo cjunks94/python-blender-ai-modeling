@@ -159,12 +159,30 @@ def register_routes(app: Flask) -> None:
                         size=size,
                         position=(pos_x, 0, 0)
                     )
+                elif data['object_type'] == 'sphere':
+                    # For sphere, size represents radius
+                    script_content = app.script_generator.generate_sphere_script(
+                        radius=size,
+                        position=(pos_x, 0, 0)
+                    )
+                elif data['object_type'] == 'cylinder':
+                    # For cylinder, size represents radius, depth is twice the radius
+                    script_content = app.script_generator.generate_cylinder_script(
+                        radius=size,
+                        depth=size * 2,  # Default height is 2x radius
+                        position=(pos_x, 0, 0)
+                    )
+                elif data['object_type'] == 'plane':
+                    script_content = app.script_generator.generate_plane_script(
+                        size=size,
+                        position=(pos_x, 0, 0)
+                    )
                 else:
-                    # TODO: Add sphere, cylinder, plane generators in future tickets
+                    # This should not happen due to earlier validation
                     return jsonify({
-                        'error': f"Object type '{data['object_type']}' not yet supported by script generator",
-                        'message': 'Currently only cube generation is implemented'
-                    }), 501
+                        'error': f"Object type '{data['object_type']}' not supported",
+                        'message': 'Invalid object type'
+                    }), 400
                     
             except ScriptGenerationError as e:
                 logger.error(f"Script generation error: {e}")

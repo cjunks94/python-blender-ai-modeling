@@ -282,24 +282,29 @@ pip-audit
 ### ✅ **Fully Implemented Features**
 
 - **Web Interface**: Modern, responsive UI built with HTML, Tailwind CSS, and vanilla JavaScript
-- **Cube Generation**: Create parametric cube objects with size and position controls
+- **Object Generation**: Create parametric 3D objects with size and position controls
+  - **Cube**: Adjustable size
+  - **Sphere**: Adjustable radius and subdivisions  
+  - **Cylinder**: Adjustable radius and height
+  - **Plane**: Adjustable size
 - **Blender Integration**: Robust subprocess execution with comprehensive error handling
 - **OBJ Export**: Export generated models to OBJ format with automatic file serving
 - **API Endpoints**: Complete REST API for programmatic access
 - **Error Handling**: Categorized errors, retry mechanisms, and user-friendly messages
-- **Testing**: 64 comprehensive tests ensuring reliability across all modules
+- **Testing**: 108 comprehensive tests ensuring reliability across all modules (64 original + 44 new)
 
 ### 🚧 **Partially Implemented Features**
 
-- **Additional Object Types**: Architecture in place, currently supports cubes only
-- **Web UI Forms**: Interface ready for additional object types and parameters
+- **Rotation Controls**: Backend supports rotation, UI controls need to be added
+- **Advanced Parameters**: Backend supports additional parameters (subdivisions, vertices), UI needs expansion
 
 ### 📋 **Ready for Implementation**
 
 The codebase is architected to easily support:
-- Additional object types (sphere, cylinder, plane) - just need new script generators
+- Rotation parameters UI - backend already supports rotation for all objects
+- Material/color selection - framework ready for material properties
 - Additional export formats (GLTF, STL) - export framework is modular
-- Enhanced parameter controls - UI and validation framework is extensible
+- Real-time 3D preview - can integrate Three.js for browser-based preview
 
 ## Configuration
 

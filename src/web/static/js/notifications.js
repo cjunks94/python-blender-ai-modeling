@@ -76,8 +76,8 @@ class NotificationSystem {
         
         notification.className = `
             transform translate-x-full opacity-0 transition-all duration-300 ease-in-out
-            max-w-md w-full ${typeStyles[type] || 'bg-white'} shadow-lg rounded-lg pointer-events-auto 
-            ring-1 ring-black ring-opacity-5 border-2
+            max-w-lg w-full ${typeStyles[type] || 'bg-white'} shadow-lg rounded-lg pointer-events-auto 
+            ring-1 ring-black ring-opacity-5 border overflow-hidden
         `;
         
         const typeConfig = this.getTypeConfig(type);
@@ -88,16 +88,16 @@ class NotificationSystem {
                     <div class="flex-shrink-0">
                         ${typeConfig.icon}
                     </div>
-                    <div class="ml-3 w-0 flex-1 pt-0.5">
+                    <div class="ml-3 flex-1 min-w-0 pt-0.5">
                         <p class="text-sm font-medium text-gray-900">
                             ${options.title || typeConfig.title}
                         </p>
-                        <p class="mt-1 text-sm text-gray-500 break-words">
+                        <p class="mt-1 text-sm text-gray-700 break-words whitespace-pre-wrap">
                             ${this.escapeHtml(message)}
                         </p>
                     </div>
                     <div class="ml-4 flex-shrink-0 flex">
-                        <button class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        <button class="rounded-md inline-flex text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 p-1"
                                 onclick="notifications.hide('${id}')">
                             <span class="sr-only">Close</span>
                             <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

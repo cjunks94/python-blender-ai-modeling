@@ -5,7 +5,16 @@ This module provides functionality to generate parametric Blender Python (bpy) s
 for creating 3D objects with proper validation and formatting.
 """
 
-from typing import Tuple, Optional, Union, Dict
+from typing import Tuple, Optional, Union, Dict, List, Any
+
+# Import scene management components
+try:
+    from scene_management import Scene, SceneObject
+    SCENE_MANAGEMENT_AVAILABLE = True
+except ImportError:
+    SCENE_MANAGEMENT_AVAILABLE = False
+    Scene = None
+    SceneObject = None
 
 
 class ScriptGenerationError(Exception):
@@ -541,3 +550,314 @@ bpy.ops.object.delete(use_global=False)"""
         script_parts.append("    obj.data.materials.append(mat)")
         
         return "\n".join(script_parts)
+    
+    # ===== SCENE GENERATION METHODS =====
+    
+    def generate_scene_script(self, scene: 'Scene') -> str:
+        """
+        Generate a complete Blender Python script for a multi-object scene.
+        
+        Args:
+            scene: Scene object containing multiple objects and relationships
+            
+        Returns:
+            Complete Blender Python script as string
+            
+        Raises:
+            ScriptGenerationError: If scene generation fails
+        """
+        if not SCENE_MANAGEMENT_AVAILABLE:
+            raise ScriptGenerationError("Scene management not available")
+        
+        if not scene or not scene.objects:
+            raise ScriptGenerationError("Scene is empty or invalid")
+        
+        try:
+            script_parts = []
+            
+            # Add header and imports
+            script_parts.extend(self._generate_scene_header(scene))
+            script_parts.append("")
+            
+            # Clear scene if enabled
+            if self.clear_scene:
+                script_parts.append(self._generate_clear_scene_script())
+                script_parts.append("")
+            
+            # Generate each object in the scene
+            for i, scene_object in enumerate(scene.objects):
+                script_parts.append(f"# Create object {i+1}: {scene_object.name} ({scene_object.object_type})")
+                
+                # Generate individual object script
+                object_script = self._generate_scene_object_script(scene_object, scene)
+                script_parts.append(object_script)
+                script_parts.append("")
+            
+            # Add scene-level setup
+            script_parts.extend(self._generate_scene_setup_script(scene))
+            script_parts.append("")
+            
+            # Add success message
+            script_parts.append(f'print("Scene \\"{scene.name}\\" generated successfully with {scene.object_count} objects")')
+            
+            return "\n".join(script_parts)
+            
+        except Exception as e:
+            raise ScriptGenerationError(f"Failed to generate scene script: {str(e)}")
+    
+    def generate_individual_object_script(self, scene_object: 'SceneObject', 
+                                        scene_context: Optional['Scene'] = None) -> str:
+        """
+        Generate a Blender script for a single object from a scene with scene context.
+        
+        Args:
+            scene_object: Individual scene object to generate
+            scene_context: Optional scene for context (lighting, etc.)
+            
+        Returns:
+            Blender Python script for individual object
+            
+        Raises:
+            ScriptGenerationError: If object generation fails
+        """
+        if not SCENE_MANAGEMENT_AVAILABLE:
+            raise ScriptGenerationError("Scene management not available")
+        
+        try:
+            script_parts = []
+            
+            # Add header
+            script_parts.append("import bpy")
+            script_parts.append("import math")
+            script_parts.append("")
+            script_parts.append(f"# Individual object: {scene_object.name}")
+            script_parts.append("")
+            
+            # Clear scene if enabled
+            if self.clear_scene:
+                script_parts.append(self._generate_clear_scene_script())
+                script_parts.append("")
+            
+            # Generate the object
+            object_script = self._generate_scene_object_script(scene_object, scene_context)
+            script_parts.append(object_script)
+            script_parts.append("")
+            
+            # Add scene context if available
+            if scene_context:
+                script_parts.extend(self._generate_scene_setup_script(scene_context))
+                script_parts.append("")
+            
+            script_parts.append(f'print("Object \\"{scene_object.name}\\" generated successfully")')
+            
+            return "\n".join(script_parts)
+            
+        except Exception as e:
+            raise ScriptGenerationError(f"Failed to generate individual object script: {str(e)}")
+    
+    def generate_selective_objects_script(self, object_ids: List[str], scene: 'Scene') -> str:
+        """
+        Generate a Blender script for selected objects from a scene.
+        
+        Args:
+            object_ids: List of object IDs to include
+            scene: Scene containing the objects
+            
+        Returns:
+            Blender Python script for selected objects
+            
+        Raises:
+            ScriptGenerationError: If selective generation fails
+        """
+        if not SCENE_MANAGEMENT_AVAILABLE:
+            raise ScriptGenerationError("Scene management not available")
+        
+        # Find selected objects
+        selected_objects = []
+        for obj_id in object_ids:
+            scene_obj = scene.get_object_by_id(obj_id)
+            if scene_obj:
+                selected_objects.append(scene_obj)
+        
+        if not selected_objects:
+            raise ScriptGenerationError("No valid objects found for selection")
+        
+        try:
+            script_parts = []
+            
+            # Add header
+            script_parts.extend(self._generate_scene_header(scene))
+            script_parts.append("")
+            script_parts.append(f"# Selected objects from scene: {scene.name}")
+            script_parts.append("")
+            
+            # Clear scene if enabled
+            if self.clear_scene:
+                script_parts.append(self._generate_clear_scene_script())
+                script_parts.append("")
+            
+            # Generate selected objects
+            for i, scene_object in enumerate(selected_objects):
+                script_parts.append(f"# Create selected object {i+1}: {scene_object.name}")
+                object_script = self._generate_scene_object_script(scene_object, scene)
+                script_parts.append(object_script)
+                script_parts.append("")
+            
+            # Add scene-level setup
+            script_parts.extend(self._generate_scene_setup_script(scene))
+            script_parts.append("")
+            
+            script_parts.append(f'print("Generated {len(selected_objects)} selected objects from scene \\"{scene.name}\\"")')
+            
+            return "\n".join(script_parts)
+            
+        except Exception as e:
+            raise ScriptGenerationError(f"Failed to generate selective objects script: {str(e)}")
+    
+    def _generate_scene_header(self, scene: 'Scene') -> List[str]:
+        """Generate scene header with imports and metadata."""
+        header = [
+            "import bpy",
+            "import math",
+            "",
+            f"# Generated scene: {scene.name}",
+            f"# Description: {scene.description}",
+            f"# Objects: {scene.object_count}",
+            f"# Created: {scene.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+        ]
+        
+        if scene.composition_notes:
+            header.append(f"# Composition: {scene.composition_notes}")
+        
+        return header
+    
+    def _generate_scene_object_script(self, scene_object: 'SceneObject', 
+                                    scene_context: Optional['Scene'] = None) -> str:
+        """Generate script for a single scene object."""
+        # Convert SceneObject parameters to the format expected by existing methods
+        params = scene_object.parameters
+        
+        # Extract position
+        position = (
+            params.get('pos_x', 0.0),
+            params.get('pos_y', 0.0), 
+            params.get('pos_z', 0.0)
+        )
+        
+        # Extract rotation (convert degrees to radians)
+        rotation = None
+        if any(key in params for key in ['rot_x', 'rot_y', 'rot_z']):
+            import math
+            rotation = (
+                math.radians(params.get('rot_x', 0.0)),
+                math.radians(params.get('rot_y', 0.0)),
+                math.radians(params.get('rot_z', 0.0))
+            )
+        
+        # Extract material
+        material = None
+        if 'color' in params:
+            material = {
+                'color': params.get('color', '#888888'),
+                'metallic': params.get('metallic', 0.0),
+                'roughness': params.get('roughness', 0.5),
+            }
+            if params.get('emission'):
+                material['emission'] = True
+                material['emission_strength'] = params.get('emission_strength', 1.0)
+        
+        # Generate object script using existing methods (without clearing scene)
+        original_clear_setting = self.clear_scene
+        self.clear_scene = False
+        
+        try:
+            if scene_object.object_type == 'cube':
+                object_script = self.generate_cube_script(
+                    size=params.get('size', 2.0),
+                    position=position,
+                    rotation=rotation,
+                    material=material
+                )
+            elif scene_object.object_type == 'sphere':
+                object_script = self.generate_sphere_script(
+                    radius=params.get('size', 2.0),
+                    position=position,
+                    rotation=rotation,
+                    material=material
+                )
+            elif scene_object.object_type == 'cylinder':
+                object_script = self.generate_cylinder_script(
+                    radius=params.get('size', 2.0),
+                    depth=params.get('size', 2.0) * 2,  # Default height is 2x radius
+                    position=position,
+                    rotation=rotation,
+                    material=material
+                )
+            elif scene_object.object_type == 'plane':
+                object_script = self.generate_plane_script(
+                    size=params.get('size', 2.0),
+                    position=position,
+                    rotation=rotation,
+                    material=material
+                )
+            else:
+                raise ScriptGenerationError(f"Unsupported object type: {scene_object.object_type}")
+            
+            # Extract just the object creation part (remove header and clear scene)
+            lines = object_script.split('\n')
+            
+            # Find the actual object creation commands (skip imports and clear scene)
+            object_lines = []
+            skip_until_create = True
+            
+            for line in lines:
+                if 'Create' in line and '#' in line:  # Found creation comment
+                    skip_until_create = False
+                
+                if not skip_until_create:
+                    # Skip import and clear scene lines
+                    if (not line.startswith('import ') and 
+                        not 'bpy.ops.object.select_all' in line and
+                        not 'bpy.ops.object.delete' in line and
+                        line.strip()):
+                        object_lines.append(line)
+            
+            # Add object naming
+            object_lines.append("")
+            object_lines.append(f"# Name the object")
+            object_lines.append(f'bpy.context.object.name = "{scene_object.name}"')
+            
+            return '\n'.join(object_lines)
+            
+        finally:
+            self.clear_scene = original_clear_setting
+    
+    def _generate_scene_setup_script(self, scene: 'Scene') -> List[str]:
+        """Generate scene-level setup (lighting, camera, etc.)."""
+        setup_lines = [
+            "# Scene setup",
+            "",
+            "# Set up basic lighting",
+            "if 'Light' not in bpy.data.objects:",
+            "    bpy.ops.object.light_add(type='SUN', location=(5, 5, 10))",
+            "    sun = bpy.context.object",
+            "    sun.data.energy = 3.0",
+            "",
+            "# Position camera for scene view",
+            "if 'Camera' in bpy.data.objects:",
+            "    camera = bpy.data.objects['Camera']",
+            "    camera.location = (7, -7, 5)",
+            "    camera.rotation_euler = (1.1, 0, 0.785)",
+            "",
+            "# Set render settings",
+            "bpy.context.scene.render.engine = 'CYCLES'",
+            "bpy.context.scene.cycles.samples = 32"
+        ]
+        
+        # Add scene-specific lighting if configured
+        if scene.lighting_setup:
+            setup_lines.append("")
+            setup_lines.append("# Custom lighting setup")
+            # Could add custom lighting logic here
+        
+        return setup_lines

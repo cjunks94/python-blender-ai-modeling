@@ -9,6 +9,18 @@ import logging
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
 
+# Import scene management components
+try:
+    from scene_management import Scene, SceneObject, RelationshipType, ScenePreviewRenderer, SCENE_PREVIEW_AVAILABLE
+    SCENE_MANAGEMENT_AVAILABLE = True
+except ImportError:
+    SCENE_MANAGEMENT_AVAILABLE = False
+    SCENE_PREVIEW_AVAILABLE = False
+    Scene = None
+    SceneObject = None
+    RelationshipType = None
+    ScenePreviewRenderer = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -364,3 +376,157 @@ class ModelInterpreter:
                     warnings.append(f"Objects {i} and {j} may be overlapping (distance: {distance:.2f})")
         
         return warnings
+    
+    def interpret_scene_to_scene_object(self, ai_data: Dict[str, Any]) -> Optional['Scene']:
+        """
+        Interpret AI response and create a complete Scene object with relationships.
+        
+        Args:
+            ai_data: AI response data containing scene and object parameters
+            
+        Returns:
+            Scene object with proper relationships or None if failed
+        """
+        if not SCENE_MANAGEMENT_AVAILABLE:
+            logger.warning("Scene management not available, falling back to basic interpretation")
+            return None
+        
+        try:
+            # Use existing scene interpretation
+            interpretation = self.interpret_scene(ai_data)
+            if not interpretation.success:
+                return None
+            
+            # Create Scene object
+            scene = Scene(
+                scene_id=f"ai_scene_{hash(ai_data.get('scene_name', 'scene')) % 10000}",
+                name=ai_data.get('scene_name', 'AI Generated Scene'),
+                description=ai_data.get('description', ''),
+                composition_notes=ai_data.get('composition_notes', ''),
+                ai_metadata={
+                    'original_prompt': ai_data.get('original_prompt', ''),
+                    'style': ai_data.get('style', 'creative'),
+                    'complexity': ai_data.get('complexity', 'medium'),
+                    'generation_timestamp': ai_data.get('timestamp')
+                }
+            )
+            
+            # Convert interpreted models to SceneObjects
+            for i, model_params in enumerate(interpretation.models):
+                scene_object = SceneObject(
+                    id=model_params.get('ai_name', f"obj_{i}"),
+                    name=ai_data.get('objects', [{}])[i].get('name', f"object_{i}"),
+                    object_type=model_params['object_type'],
+                    parameters=model_params,
+                    ai_reasoning=ai_data.get('objects', [{}])[i].get('reasoning', '')
+                )
+                
+                scene.add_object(scene_object)
+            
+            # Add relationships based on AI composition notes
+            self._extract_relationships_from_ai_data(scene, ai_data)
+            
+            logger.info(f"Created Scene object with {scene.object_count} objects")
+            return scene
+            
+        except Exception as e:
+            logger.error(f"Failed to create Scene object: {str(e)}")
+            return None
+    
+    def _extract_relationships_from_ai_data(self, scene: 'Scene', ai_data: Dict[str, Any]) -> None:
+        """Extract and add spatial relationships from AI data."""
+        try:
+            composition_notes = ai_data.get('composition_notes', '').lower()
+            objects_data = ai_data.get('objects', [])
+            
+            # Simple relationship extraction based on common phrases
+            relationship_patterns = {
+                'on top of': RelationshipType.ON_TOP_OF,
+                'on': RelationshipType.ON_TOP_OF,
+                'next to': RelationshipType.NEXT_TO,
+                'beside': RelationshipType.NEXT_TO,
+                'behind': RelationshipType.BEHIND,
+                'in front of': RelationshipType.IN_FRONT_OF,
+                'around': RelationshipType.AROUND
+            }
+            
+            # Try to extract relationships from object descriptions
+            for i, obj_data in enumerate(objects_data):
+                obj_description = obj_data.get('description', '').lower()
+                obj_name = obj_data.get('name', f"object_{i}").lower()
+                
+                current_obj = scene.objects[i] if i < len(scene.objects) else None
+                if not current_obj:
+                    continue
+                
+                # Look for relationship patterns in the description
+                for pattern, relationship_type in relationship_patterns.items():
+                    if pattern in obj_description:
+                        # Try to find the target object
+                        for j, other_obj in enumerate(scene.objects):
+                            if i != j and other_obj.name.lower() in obj_description:
+                                current_obj.add_relationship(
+                                    other_obj.id, 
+                                    relationship_type
+                                )
+                                logger.info(f"Added relationship: {current_obj.name} {pattern} {other_obj.name}")
+                                break
+            
+        except Exception as e:
+            logger.error(f"Failed to extract relationships: {str(e)}")
+    
+    def generate_scene_preview(self, scene: 'Scene', output_path: str) -> bool:
+        """
+        Generate a preview image for a complete scene.
+        
+        Args:
+            scene: Scene object to render
+            output_path: Path where preview image will be saved
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if not SCENE_PREVIEW_AVAILABLE:
+            logger.warning("Scene preview rendering not available")
+            return False
+        
+        try:
+            renderer = ScenePreviewRenderer()
+            success = renderer.render_scene_preview(scene, output_path)
+            
+            if success:
+                logger.info(f"Generated scene preview for '{scene.name}' at {output_path}")
+            else:
+                logger.error(f"Failed to generate scene preview for '{scene.name}'")
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Scene preview generation failed: {str(e)}")
+            return False
+    
+    def generate_object_thumbnails(self, scene: 'Scene', output_directory: str) -> Dict[str, str]:
+        """
+        Generate thumbnail previews for all objects in a scene.
+        
+        Args:
+            scene: Scene containing objects to render
+            output_directory: Directory to save thumbnails
+            
+        Returns:
+            Dictionary mapping object IDs to thumbnail file paths
+        """
+        if not SCENE_PREVIEW_AVAILABLE:
+            logger.warning("Scene preview rendering not available")
+            return {}
+        
+        try:
+            renderer = ScenePreviewRenderer()
+            thumbnails = renderer.render_scene_thumbnails(scene, output_directory)
+            
+            logger.info(f"Generated {len(thumbnails)} thumbnails for scene '{scene.name}'")
+            return thumbnails
+            
+        except Exception as e:
+            logger.error(f"Thumbnail generation failed: {str(e)}")
+            return {}

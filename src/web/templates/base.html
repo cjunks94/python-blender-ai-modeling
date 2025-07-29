@@ -61,6 +61,20 @@
         .tab-panel.active {
             @apply block;
         }
+        
+        /* Range slider styles for dark mode */
+        .dark input[type="range"]::-webkit-slider-thumb {
+            @apply bg-blender-orange;
+        }
+        
+        .dark input[type="range"]::-moz-range-thumb {
+            @apply bg-blender-orange;
+        }
+        
+        /* Input field focus styles */
+        .dark input:focus, .dark select:focus, .dark textarea:focus {
+            @apply ring-2 ring-blender-orange ring-opacity-50;
+        }
     </style>
     
     {% block head %}{% endblock %}

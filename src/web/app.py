@@ -56,6 +56,21 @@ except ImportError as e:
     ExportError = None
     print(f"Warning: Export functionality not available: {e}")
 
+# Import AI integration
+try:
+    from ai_integration.ai_client import AIClient
+    from ai_integration.model_interpreter import ModelInterpreter
+    from ai_integration.prompt_engineer import PromptEngineer
+    from ai_integration.script_validator import ScriptValidator
+    AI_AVAILABLE = True
+except ImportError as e:
+    AI_AVAILABLE = False
+    AIClient = None
+    ModelInterpreter = None
+    PromptEngineer = None
+    ScriptValidator = None
+    print(f"Warning: AI integration not available: {e}")
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

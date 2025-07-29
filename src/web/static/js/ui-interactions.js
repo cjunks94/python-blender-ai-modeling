@@ -237,33 +237,58 @@ class UIController {
         console.log('Setting up collapsible sections, found:', sectionToggles.length);
         
         sectionToggles.forEach(toggle => {
-            toggle.addEventListener('click', (e) => {
+            // Remove any existing listeners first
+            const newToggle = toggle.cloneNode(true);
+            toggle.parentNode.replaceChild(newToggle, toggle);
+            
+            newToggle.addEventListener('click', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
-                const section = toggle.getAttribute('data-section');
+                
+                const section = newToggle.getAttribute('data-section');
                 const content = document.getElementById(`${section}-content`);
-                const icon = toggle.querySelector('.toggle-icon');
+                const icon = newToggle.querySelector('.toggle-icon');
+                
+                if (!content) {
+                    console.error('Content section not found:', `${section}-content`);
+                    return;
+                }
                 
                 console.log('Toggling section:', section);
+                
+                // Force browser to recalculate styles
+                content.style.display = 'block';
+                const height = content.scrollHeight;
+                content.style.display = '';
                 
                 // Toggle expanded state
                 const isExpanded = content.classList.contains('expanded');
                 
                 if (isExpanded) {
                     // Collapse
-                    toggle.classList.remove('expanded');
-                    content.classList.remove('expanded');
+                    newToggle.classList.remove('expanded');
                     icon.classList.remove('expanded');
+                    content.style.maxHeight = height + 'px';
+                    // Force reflow
+                    content.offsetHeight;
+                    content.classList.remove('expanded');
+                    content.style.maxHeight = '0';
                     console.log('Collapsed section:', section);
                 } else {
                     // Expand
-                    toggle.classList.add('expanded');
-                    content.classList.add('expanded');
+                    newToggle.classList.add('expanded');
                     icon.classList.add('expanded');
+                    content.classList.add('expanded');
+                    content.style.maxHeight = height + 'px';
+                    // Remove inline style after transition
+                    setTimeout(() => {
+                        content.style.maxHeight = '';
+                    }, 500);
                     console.log('Expanded section:', section);
                     
                     // Initialize scene management if expanding scene section
                     if (section === 'scene' && window.sceneManager) {
-                        window.sceneManager.loadScenes();
+                        setTimeout(() => window.sceneManager.loadScenes(), 100);
                     }
                 }
                 
@@ -274,15 +299,9 @@ class UIController {
             });
         });
         
-        // Restore section states (all collapsed by default)
-        const savedStates = this.getSectionStates();
-        sectionToggles.forEach(toggle => {
-            const section = toggle.getAttribute('data-section');
-            if (savedStates[section]) {
-                // If saved as expanded, trigger click to expand
-                setTimeout(() => toggle.click(), 100);
-            }
-        });
+        // Don't restore states on initial load - keep everything collapsed
+        // Clear any saved states to ensure clean start
+        localStorage.removeItem('sectionStates');
     }
     
     getSectionStates() {

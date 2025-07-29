@@ -47,12 +47,14 @@
         
         /* Collapsible section styles */
         .section-content {
-            display: none;
-            transition: all 0.3s ease;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
         }
         
         .section-content.expanded {
-            display: block;
+            max-height: 5000px;
+            transition: max-height 0.5s ease-in;
         }
         
         .toggle-icon {

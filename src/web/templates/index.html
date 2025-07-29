@@ -31,7 +31,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
         </button>
-        <div class="section-content hidden" id="manual-content">
+        <div class="section-content" id="manual-content">
         <div class="p-6 pt-0 grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Model Creation Panel -->
             <div class="lg:col-span-2">
@@ -332,7 +332,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
         </button>
-        <div class="section-content hidden" id="ai-content">
+        <div class="section-content" id="ai-content">
             <div class="p-6">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
                     <svg class="h-5 w-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -367,7 +367,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
         </button>
-        <div class="section-content hidden" id="scene-content">
+        <div class="section-content" id="scene-content">
             <div class="p-6">
                 {% include 'scene_management.html' %}
             </div>
@@ -495,40 +495,24 @@
 <script src="{{ url_for('static', filename='js/scene-management.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ai-integration.js') }}"></script>
 <script>
-// Fallback collapsible sections handler
-document.addEventListener('DOMContentLoaded', function() {
-    // Give the main UI controller a chance to initialize first
-    setTimeout(function() {
-        const toggles = document.querySelectorAll('.section-toggle');
-        console.log('Fallback: Found section toggles:', toggles.length);
+// Ensure collapsible sections work immediately
+(function() {
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCollapsibles);
+    } else {
+        initCollapsibles();
+    }
+    
+    function initCollapsibles() {
+        // Initialize all section contents to collapsed state
+        document.querySelectorAll('.section-content').forEach(content => {
+            content.style.maxHeight = '0';
+            content.style.overflow = 'hidden';
+        });
         
-        // Only set up if not already initialized
-        if (toggles.length > 0 && !toggles[0]._listenerAttached) {
-            toggles.forEach(function(toggle) {
-                toggle._listenerAttached = true;
-                toggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    const section = toggle.getAttribute('data-section');
-                    const content = document.getElementById(section + '-content');
-                    const icon = toggle.querySelector('.toggle-icon');
-                    
-                    if (!content) {
-                        console.error('Content not found for section:', section);
-                        return;
-                    }
-                    
-                    // Toggle classes
-                    toggle.classList.toggle('expanded');
-                    content.classList.toggle('expanded');
-                    icon.classList.toggle('expanded');
-                    
-                    console.log('Fallback toggled section:', section, 'Expanded:', content.classList.contains('expanded'));
-                });
-            });
-        }
-    }, 500);
-});
+        console.log('Collapsible sections initialized');
+    }
+})();
 </script>
 {% endblock %}

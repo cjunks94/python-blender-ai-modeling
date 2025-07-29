@@ -1338,107 +1338,81 @@ def register_routes(app: Flask) -> None:
                     # If no cached preview, generate composite
                     logger.info(f"Generating composite preview for scene {scene_id}")
                     
-                    # Create a composite script that includes all objects
-                    composite_script = """import bpy
-import math
-
-# Clear existing objects
-bpy.ops.object.select_all(action='SELECT')
-bpy.ops.object.delete(use_global=False)
-
-# Composite scene preview
-"""
-                    
-                    # Add each object from the scene with simpler approach
-                    for i, obj in enumerate(scene.objects):
-                        params = obj.parameters
-                        object_type = params.get('object_type')
-                        size = params.get('size', 2.0)
-                        pos_x = params.get('pos_x', 0)
-                        pos_y = params.get('pos_y', 0)
-                        pos_z = params.get('pos_z', 0)
+                    # Use the new composite renderer for stable preview generation
+                    try:
+                        from blender_integration.composite_renderer import CompositeRenderer
+                        composite_renderer = CompositeRenderer()
                         
-                        composite_script += f"\n# Object {i+1}: {obj.name} ({object_type})\n"
+                        # Prepare objects for composite rendering
+                        objects_data = []
+                        for obj in scene.objects:
+                            objects_data.append(obj.parameters)
                         
-                        # Create object based on type
-                        if object_type == 'cube':
-                            composite_script += f"bpy.ops.mesh.primitive_cube_add(size={size}, location=({pos_x}, {pos_y}, {pos_z}))\n"
-                        elif object_type == 'sphere':
-                            composite_script += f"bpy.ops.mesh.primitive_uv_sphere_add(radius={size}, location=({pos_x}, {pos_y}, {pos_z}))\n"
-                        elif object_type == 'cylinder':
-                            composite_script += f"bpy.ops.mesh.primitive_cylinder_add(radius={size}, depth={size*2}, location=({pos_x}, {pos_y}, {pos_z}))\n"
-                        elif object_type == 'plane':
-                            composite_script += f"bpy.ops.mesh.primitive_plane_add(size={size}, location=({pos_x}, {pos_y}, {pos_z}))\n"
-                        else:
-                            continue
+                        # Simplify objects for stable rendering
+                        simplified_objects = composite_renderer.simplify_objects_for_preview(objects_data)
                         
-                        # Apply rotation if any
-                        if any(params.get(f'rot_{axis}', 0) != 0 for axis in ['x', 'y', 'z']):
-                            rot_x = math.radians(params.get('rot_x', 0))
-                            rot_y = math.radians(params.get('rot_y', 0))
-                            rot_z = math.radians(params.get('rot_z', 0))
-                            composite_script += f"bpy.context.object.rotation_euler = ({rot_x}, {rot_y}, {rot_z})\n"
+                        # Generate stable composite script
+                        composite_script = composite_renderer.generate_stable_composite_script(
+                            simplified_objects, 
+                            scene_name=scene.name
+                        )
                         
-                        # Apply material if color specified
-                        if params.get('color'):
-                            color = params['color']
-                            if isinstance(color, str) and color.startswith('#'):
-                                color = color.lstrip('#')
-                                r = int(color[0:2], 16) / 255.0
-                                g = int(color[2:4], 16) / 255.0
-                                b = int(color[4:6], 16) / 255.0
+                        # Debug: save the composite script
+                        debug_path = f"debug_composite_{scene_id}_stable.py"
+                        with open(debug_path, "w") as f:
+                            f.write(composite_script)
+                        logger.info(f"Saved debug composite script to {debug_path}")
+                        
+                        # Now try to execute the stable composite script
+                        import tempfile
+                        import os
+                        
+                        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_script:
+                            temp_script.write(composite_script)
+                            script_path = temp_script.name
+                        
+                        try:
+                            # Set up environment variables for rendering
+                            env = os.environ.copy()
+                            env['BLENDER_RENDER_OUTPUT'] = output_path
+                            
+                            # Execute with timeout for safety
+                            import subprocess
+                            result = subprocess.run(
+                                [app.blender_executor.blender_path, '--background', '--python', script_path],
+                                capture_output=True,
+                                text=True,
+                                timeout=30,  # 30 second timeout
+                                env=env
+                            )
+                            
+                            if result.returncode == 0 and os.path.exists(output_path):
+                                logger.info(f"Successfully rendered composite preview for scene {scene_id}")
+                                return jsonify({
+                                    'preview_url': f'/api/scene/{scene_id}/preview',
+                                    'scene_id': scene_id,
+                                    'composite': True,
+                                    'object_count': len(simplified_objects)
+                                })
+                            else:
+                                logger.warning(f"Composite render failed: {result.stderr}")
                                 
-                                composite_script += f"""# Apply material
-mat = bpy.data.materials.new(name='Mat_{i}')
-mat.use_nodes = True
-bsdf = mat.node_tree.nodes['Principled BSDF']
-bsdf.inputs['Base Color'].default_value = ({r}, {g}, {b}, 1.0)
-bsdf.inputs['Metallic'].default_value = {params.get('metallic', 0.0)}
-bsdf.inputs['Roughness'].default_value = {params.get('roughness', 0.5)}
-"""
-                                if params.get('emission'):
-                                    composite_script += f"bsdf.inputs['Emission Strength'].default_value = {params.get('emission_strength', 5.0)}\n"
+                        except subprocess.TimeoutExpired:
+                            logger.error("Composite render timed out")
+                        except Exception as e:
+                            logger.error(f"Composite render error: {e}")
+                        finally:
+                            # Clean up temp file
+                            try:
+                                os.unlink(script_path)
+                            except:
+                                pass
                                 
-                                composite_script += """obj = bpy.context.active_object
-if obj.data.materials:
-    obj.data.materials[0] = mat
-else:
-    obj.data.materials.append(mat)
-"""
+                    except Exception as e:
+                        logger.error(f"Failed to use composite renderer: {e}")
                     
-                    # Add scene setup and camera positioning for better view
-                    composite_script += """
-# Set up camera for scene view
-if 'Camera' not in bpy.data.objects:
-    bpy.ops.object.camera_add(location=(7, -7, 5))
-camera = bpy.data.objects['Camera']
-camera.location = (7, -7, 5)
-camera.rotation_euler = (1.1, 0, 0.785)  # Point at scene center
-    
-# Set up lighting
-if 'Light' not in bpy.data.objects:
-    bpy.ops.object.light_add(type='SUN', location=(4, -4, 6))
-light = bpy.data.objects['Light']
-light.location = (4, -4, 6)
-light.data.energy = 3.0
-
-# Set render settings
-bpy.context.scene.render.engine = 'CYCLES'
-bpy.context.scene.cycles.samples = 32
-
-# Save the file
-bpy.ops.wm.save_as_mainfile(filepath=bpy.data.filepath)
-
-print("Composite scene generated successfully")
-"""
-                    
-                    # Debug: save the composite script
-                    with open(f"debug_composite_{scene_id}.py", "w") as f:
-                        f.write(composite_script)
-                    
-                    # For now, skip the complex composite and use fallback
-                    # The composite script is generated correctly but there are execution issues
-                    logger.info(f"Scene has {len(scene.objects)} objects, using fallback preview for now")
+                    # If composite rendering failed, use fallback
+                    logger.info(f"Scene has {len(scene.objects)} objects, using fallback preview")
                     
                     # Ultimate fallback: just render first object
                     first_object = scene.objects[0]

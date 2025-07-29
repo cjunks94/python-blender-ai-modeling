@@ -41,11 +41,16 @@ except ImportError as e:
 
 # Import export functionality
 try:
-    from export.obj_exporter import OBJExporter, ExportError
+    from export.obj_exporter import OBJExporter
+    from export.gltf_exporter import GLTFExporter
+    from export.stl_exporter import STLExporter
+    from export.obj_exporter import ExportError
     EXPORT_AVAILABLE = True
 except ImportError as e:
     EXPORT_AVAILABLE = False
     OBJExporter = None
+    GLTFExporter = None
+    STLExporter = None
     ExportError = None
     print(f"Warning: Export functionality not available: {e}")
 
@@ -80,6 +85,14 @@ def create_app(config: Dict[str, Any] = None) -> Flask:
     # Initialize export tools if available
     if EXPORT_AVAILABLE:
         app.obj_exporter = OBJExporter(
+            blender_path=app.config['BLENDER_PATH'],
+            timeout=app.config['BLENDER_TIMEOUT']
+        )
+        app.gltf_exporter = GLTFExporter(
+            blender_path=app.config['BLENDER_PATH'],
+            timeout=app.config['BLENDER_TIMEOUT']
+        )
+        app.stl_exporter = STLExporter(
             blender_path=app.config['BLENDER_PATH'],
             timeout=app.config['BLENDER_TIMEOUT']
         )
@@ -403,7 +416,7 @@ def register_routes(app: Flask) -> None:
                 return jsonify({'error': 'Missing required field: model_params'}), 400
             
             # Validate format
-            valid_formats = ['obj']  # Currently only OBJ is supported
+            valid_formats = ['obj', 'gltf', 'glb', 'stl']
             if data['format'] not in valid_formats:
                 return jsonify({'error': f'Invalid format. Must be one of: {valid_formats}'}), 400
             
@@ -419,44 +432,49 @@ def register_routes(app: Flask) -> None:
             model_params = data['model_params']
             
             try:
-                # Export the model using OBJExporter
+                # Export the model based on format
                 if format_ext == 'obj':
                     result = app.obj_exporter.export_obj(model_id, model_params)
-                    
-                    if result.success:
-                        # Convert file size to human readable format
-                        if result.file_size:
-                            if result.file_size < 1024:
-                                size_str = f"{result.file_size} B"
-                            elif result.file_size < 1024 * 1024:
-                                size_str = f"{result.file_size / 1024:.1f} KB"
-                            else:
-                                size_str = f"{result.file_size / (1024 * 1024):.1f} MB"
-                        else:
-                            size_str = "Unknown"
-                        
-                        response = {
-                            'model_id': result.model_id,
-                            'format': result.format,
-                            'filename': Path(result.output_file).name,
-                            'download_url': f'/api/download/{Path(result.output_file).name}',
-                            'size': size_str,
-                            'file_path': result.output_file,
-                            'created_at': '2024-01-01T12:00:00Z'  # TODO: Use actual timestamp
-                        }
-                        
-                        logger.info(f"Successfully exported model {model_id} as {format_ext}")
-                        return jsonify(response)
-                    else:
-                        return jsonify({
-                            'error': 'Export failed',
-                            'message': result.error_message or 'Unknown export error'
-                        }), 500
+                elif format_ext in ['gltf', 'glb']:
+                    binary = (format_ext == 'glb')
+                    result = app.gltf_exporter.export_gltf(model_id, model_params, binary=binary)
+                elif format_ext == 'stl':
+                    result = app.stl_exporter.export_stl(model_id, model_params)
                 else:
                     return jsonify({
-                        'error': f'Format {format_ext} not yet implemented',
-                        'message': 'Currently only OBJ export is supported'
-                    }), 501
+                        'error': f'Format {format_ext} not supported',
+                        'message': 'Invalid export format'
+                    }), 400
+                
+                if result.success:
+                    # Convert file size to human readable format
+                    if result.file_size:
+                        if result.file_size < 1024:
+                            size_str = f"{result.file_size} B"
+                        elif result.file_size < 1024 * 1024:
+                            size_str = f"{result.file_size / 1024:.1f} KB"
+                        else:
+                            size_str = f"{result.file_size / (1024 * 1024):.1f} MB"
+                    else:
+                        size_str = "Unknown"
+                    
+                    response = {
+                        'model_id': result.model_id,
+                        'format': result.format,
+                        'filename': Path(result.output_file).name,
+                        'download_url': f'/api/download/{Path(result.output_file).name}',
+                        'size': size_str,
+                        'file_path': result.output_file,
+                        'created_at': '2024-01-01T12:00:00Z'  # TODO: Use actual timestamp
+                    }
+                    
+                    logger.info(f"Successfully exported model {model_id} as {format_ext}")
+                    return jsonify(response)
+                else:
+                    return jsonify({
+                        'error': 'Export failed',
+                        'message': result.error_message or 'Unknown export error'
+                    }), 500
                     
             except ExportError as e:
                 logger.error(f"Export error: {e}")

@@ -16,17 +16,44 @@
     </div>
 </div>
 
-<!-- Main Dashboard -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <!-- Model Creation Panel -->
-    <div class="lg:col-span-2">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
-                <svg class="h-6 w-6 text-blender-orange mr-2" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
-                Create 3D Object
-            </h2>
+<!-- Tab Navigation -->
+<div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+        <button type="button" class="tab-button active" data-tab="manual">
+            <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            Manual Creation
+        </button>
+        <button type="button" class="tab-button" data-tab="ai">
+            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            AI Generation
+        </button>
+        <button type="button" class="tab-button" data-tab="scene">
+            <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+            </svg>
+            Scene Management
+        </button>
+    </nav>
+</div>
+
+<!-- Tab Content -->
+<div class="tab-content">
+    <!-- Manual Creation Tab -->
+    <div id="manual-tab" class="tab-panel active">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Model Creation Panel -->
+            <div class="lg:col-span-2">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
+                        <svg class="h-6 w-6 text-blender-orange mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                        Create 3D Object
+                    </h2>
             
             <form id="model-form" class="space-y-6">
                 <!-- Object Type Selection -->
@@ -206,21 +233,12 @@
                 </div>
                 
                 <!-- Generate Buttons -->
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <button type="submit" class="flex-1 bg-blender-orange hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors hover-scale">
-                        <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                        </svg>
-                        Generate Model
-                    </button>
-                    
-                    <button type="button" id="ai-generate-btn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors hover-scale">
-                        <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                        </svg>
-                        AI Generate
-                    </button>
-                </div>
+                <button type="submit" class="w-full bg-blender-orange hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors hover-scale">
+                    <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    Generate Model
+                </button>
             </form>
         </div>
     </div>
@@ -310,6 +328,36 @@
         </div>
     </div>
 </div>
+</div><!-- End Manual Tab -->
+
+<!-- AI Generation Tab -->
+<div id="ai-tab" class="tab-panel">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
+            <svg class="h-6 w-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            AI Model Generation
+        </h2>
+        
+        <div class="text-center py-12">
+            <svg class="h-24 w-24 text-purple-200 dark:text-purple-700 mx-auto mb-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">AI Generation Coming Soon</h3>
+            <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                Describe what you want to create in natural language and let AI generate the 3D model for you.
+            </p>
+        </div>
+    </div>
+</div><!-- End AI Tab -->
+
+<!-- Scene Management Tab -->
+<div id="scene-tab" class="tab-panel">
+    {% include 'scene_management.html' %}
+</div><!-- End Scene Tab -->
+
+</div><!-- End Tab Content -->
 
 <!-- Progress Modal -->
 <div id="progress-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">

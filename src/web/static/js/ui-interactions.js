@@ -12,6 +12,7 @@ class UIController {
         this.setupHelpButton();
         this.setupGetStartedButton();
         this.setupKeyboardShortcuts();
+        this.setupTabSwitching();
         
         console.log('UI Controller initialized');
     }
@@ -229,6 +230,43 @@ class UIController {
                 }
             }
         });
+    }
+    
+    setupTabSwitching() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.getAttribute('data-tab');
+                
+                // Update active states
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabPanels.forEach(panel => panel.classList.remove('active'));
+                
+                // Set active tab
+                button.classList.add('active');
+                const targetPanel = document.getElementById(`${targetTab}-tab`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+                
+                // Save preference
+                localStorage.setItem('activeTab', targetTab);
+                
+                // Initialize scene management if switching to scene tab
+                if (targetTab === 'scene' && window.sceneManager) {
+                    window.sceneManager.loadScenes();
+                }
+            });
+        });
+        
+        // Restore last active tab
+        const savedTab = localStorage.getItem('activeTab') || 'manual';
+        const savedButton = document.querySelector(`.tab-button[data-tab="${savedTab}"]`);
+        if (savedButton) {
+            savedButton.click();
+        }
     }
 }
 

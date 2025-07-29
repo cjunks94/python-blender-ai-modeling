@@ -155,6 +155,9 @@ class ModelFormController {
             this.updateStatusMessage(`Model generated successfully: ${response.object_type}`);
             notifications.success('Model generated successfully!');
             
+            // Display preview if available
+            this.displayPreview(response);
+            
             // Enable export button
             this.enableExport();
             
@@ -268,6 +271,57 @@ class ModelFormController {
             
         } catch (error) {
             notifications.error(`Export failed: ${error.message}`);
+        }
+    }
+    
+    displayPreview(response) {
+        const previewPanel = document.getElementById('preview-panel');
+        const previewContainer = document.getElementById('preview-container');
+        const previewLoading = document.getElementById('preview-loading');
+        const previewImage = document.getElementById('preview-image');
+        const previewError = document.getElementById('preview-error');
+        const previewInfo = document.getElementById('preview-info');
+        const previewDimensions = document.getElementById('preview-dimensions');
+        
+        // Show the preview panel
+        previewPanel.classList.remove('hidden');
+        
+        // Reset all states
+        previewLoading.classList.remove('hidden');
+        previewImage.classList.add('hidden');
+        previewError.classList.add('hidden');
+        previewInfo.classList.add('hidden');
+        
+        if (response.preview_url) {
+            // Load the preview image
+            const img = new Image();
+            
+            img.onload = () => {
+                previewLoading.classList.add('hidden');
+                previewImage.src = response.preview_url;
+                previewImage.classList.remove('hidden');
+                
+                // Show image info
+                previewDimensions.textContent = `400 × 400 pixels`;
+                previewInfo.classList.remove('hidden');
+                
+                this.updateStatusMessage('Preview image loaded successfully');
+            };
+            
+            img.onerror = () => {
+                previewLoading.classList.add('hidden');
+                previewError.classList.remove('hidden');
+                this.updateStatusMessage('Preview image failed to load');
+            };
+            
+            // Add cache buster to ensure fresh image
+            const cacheBuster = Date.now();
+            img.src = `${response.preview_url}?v=${cacheBuster}`;
+        } else {
+            // No preview available
+            previewLoading.classList.add('hidden');
+            previewError.classList.remove('hidden');
+            this.updateStatusMessage('No preview available for this model');
         }
     }
     

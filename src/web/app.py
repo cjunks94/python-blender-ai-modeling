@@ -32,11 +32,13 @@ if env_file.exists():
 try:
     from blender_integration.executor import BlenderExecutor, BlenderExecutionError, BlenderScriptError
     from blender_integration.script_generator import ScriptGenerator, ScriptGenerationError
+    from blender_integration.preview_renderer import PreviewRenderer
     BLENDER_AVAILABLE = True
 except ImportError as e:
     BLENDER_AVAILABLE = False
     BlenderExecutor = None
     ScriptGenerator = None
+    PreviewRenderer = None
     print(f"Warning: Blender integration not available: {e}")
 
 # Import export functionality
@@ -81,6 +83,15 @@ def create_app(config: Dict[str, Any] = None) -> Flask:
             timeout=app.config['BLENDER_TIMEOUT']
         )
         app.script_generator = ScriptGenerator(clear_scene=True)
+        # Use absolute path for preview directory
+        preview_dir = Path(__file__).parent.parent.parent / "previews"
+        app.preview_renderer = PreviewRenderer(
+            blender_path=app.config['BLENDER_PATH'],
+            timeout=app.config['BLENDER_TIMEOUT']
+        )
+        # Override the preview directory to use absolute path
+        app.preview_renderer.preview_dir = preview_dir
+        app.preview_renderer.preview_dir.mkdir(exist_ok=True)
     
     # Initialize export tools if available
     if EXPORT_AVAILABLE:
@@ -284,6 +295,20 @@ def register_routes(app: Flask) -> None:
                             'z': round(math.degrees(rotation[2]), 1)
                         }
                     
+                    # Generate preview image
+                    preview_url = None
+                    try:
+                        # Build complete model params for preview
+                        preview_params = data.copy()
+                        preview_result = app.preview_renderer.render_preview(model_id, preview_params)
+                        if preview_result.success:
+                            preview_url = f'/api/preview/{model_id}_preview.png'
+                            logger.info(f"Preview rendered for model {model_id}")
+                        else:
+                            logger.warning(f"Preview generation failed: {preview_result.error_message}")
+                    except Exception as e:
+                        logger.error(f"Preview generation error: {str(e)}")
+                    
                     # Build message
                     message = f'Successfully generated {data["object_type"]} with size {size} at position X={pos_x}'
                     if rotation:
@@ -296,6 +321,7 @@ def register_routes(app: Flask) -> None:
                         'status': 'generated',
                         'message': message,
                         'blender_output': result.stdout,
+                        'preview_url': preview_url,
                         'created_at': '2024-01-01T12:00:00Z'  # TODO: Use actual timestamp
                     }
                 else:
@@ -520,6 +546,46 @@ def register_routes(app: Flask) -> None:
         except Exception as e:
             logger.error(f"Download failed: {e}", exc_info=True)
             return jsonify({'error': 'Internal server error during download'}), 500
+    
+    @app.route('/api/preview/<filename>')
+    def preview_image(filename: str):
+        """Serve preview image."""
+        try:
+            # Check if Blender functionality is available
+            if not BLENDER_AVAILABLE:
+                return jsonify({
+                    'error': 'Preview functionality not available',
+                    'message': 'Blender integration not loaded'
+                }), 503
+            
+            # Check if preview renderer is available
+            if not hasattr(app, 'preview_renderer'):
+                return jsonify({
+                    'error': 'Preview renderer not initialized',
+                    'message': 'Preview functionality not properly configured'
+                }), 503
+            
+            # Build file path from preview renderer's output directory
+            file_path = app.preview_renderer.preview_dir / filename
+            
+            # Check if file exists
+            if not file_path.exists():
+                return jsonify({
+                    'error': 'Preview not found',
+                    'filename': filename,
+                    'message': f'The preview image {filename} does not exist'
+                }), 404
+            
+            # Serve the image
+            return send_file(
+                str(file_path),
+                mimetype='image/png',
+                as_attachment=False
+            )
+            
+        except Exception as e:
+            logger.error(f"Preview serve failed: {e}", exc_info=True)
+            return jsonify({'error': 'Internal server error serving preview'}), 500
 
 
 def register_error_handlers(app: Flask) -> None:

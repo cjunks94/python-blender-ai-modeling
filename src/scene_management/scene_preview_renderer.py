@@ -6,9 +6,14 @@ with multiple objects, generating composite preview images for entire scenes.
 """
 
 import logging
+import sys
 import tempfile
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
+
+# Add utils to path for resource manager
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from utils.resource_manager import create_temp_script_file, cleanup_old_temp_files
 
 # Import scene management components
 from .scene_models import Scene, SceneObject
@@ -82,15 +87,11 @@ class ScenePreviewRenderer:
             # Use settings optimized for scenes
             scene_render_settings = self._get_scene_render_settings(render_settings)
             
-            # Create temporary script file
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
-                temp_file.write(enhanced_script)
-                temp_script_path = temp_file.name
-            
-            try:
+            # Create temporary script file with managed cleanup
+            with create_temp_script_file(enhanced_script, suffix='.py') as temp_script_path:
                 # Render using the preview renderer
                 success = self.preview_renderer.render_preview(
-                    temp_script_path, output_path, scene_render_settings
+                    str(temp_script_path), output_path, scene_render_settings
                 )
                 
                 if success:
@@ -99,10 +100,6 @@ class ScenePreviewRenderer:
                     logger.error(f"Failed to render scene preview: {scene.name}")
                 
                 return success
-                
-            finally:
-                # Clean up temporary file
-                Path(temp_script_path).unlink(missing_ok=True)
                 
         except Exception as e:
             logger.error(f"Scene preview rendering failed: {str(e)}")
@@ -133,14 +130,10 @@ class ScenePreviewRenderer:
             # Use standard preview renderer settings for individual objects
             individual_render_settings = render_settings or {}
             
-            # Create temporary script file
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
-                temp_file.write(object_script)
-                temp_script_path = temp_file.name
-            
-            try:
+            # Create temporary script file with managed cleanup
+            with create_temp_script_file(object_script, suffix='.py') as temp_script_path:
                 success = self.preview_renderer.render_preview(
-                    temp_script_path, output_path, individual_render_settings
+                    str(temp_script_path), output_path, individual_render_settings
                 )
                 
                 if success:
@@ -149,9 +142,6 @@ class ScenePreviewRenderer:
                     logger.error(f"Failed to render individual object preview: {scene_object.name}")
                 
                 return success
-                
-            finally:
-                Path(temp_script_path).unlink(missing_ok=True)
                 
         except Exception as e:
             logger.error(f"Individual object preview rendering failed: {str(e)}")
@@ -184,14 +174,10 @@ class ScenePreviewRenderer:
             # Use scene render settings
             scene_render_settings = self._get_scene_render_settings(render_settings)
             
-            # Create temporary script file
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
-                temp_file.write(enhanced_script)
-                temp_script_path = temp_file.name
-            
-            try:
+            # Create temporary script file with managed cleanup
+            with create_temp_script_file(enhanced_script, suffix='.py') as temp_script_path:
                 success = self.preview_renderer.render_preview(
-                    temp_script_path, output_path, scene_render_settings
+                    str(temp_script_path), output_path, scene_render_settings
                 )
                 
                 if success:
@@ -200,9 +186,6 @@ class ScenePreviewRenderer:
                     logger.error(f"Failed to render selective objects preview")
                 
                 return success
-                
-            finally:
-                Path(temp_script_path).unlink(missing_ok=True)
                 
         except Exception as e:
             logger.error(f"Selective objects preview rendering failed: {str(e)}")

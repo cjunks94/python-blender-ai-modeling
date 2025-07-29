@@ -9,6 +9,9 @@ import os
 import sys
 import logging
 import math
+import threading
+import time
+import atexit
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_file
 from pathlib import Path
@@ -16,6 +19,9 @@ from typing import Dict, Any
 
 # Add parent directory to Python path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Import resource management
+from utils.resource_manager import cleanup_all_resources, cleanup_old_temp_files
 
 # Load environment variables from .env file if it exists
 from pathlib import Path
@@ -92,6 +98,103 @@ except ImportError as e:
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+class PeriodicCleanupManager:
+    """Manages periodic cleanup of temporary files and resources."""
+    
+    def __init__(self, app: Flask = None, interval_hours: int = 4):
+        """
+        Initialize cleanup manager.
+        
+        Args:
+            app: Flask application instance
+            interval_hours: Cleanup interval in hours
+        """
+        self.app = app
+        self.interval_hours = interval_hours
+        self.cleanup_thread = None
+        self.stop_event = threading.Event()
+        self.running = False
+        
+    def start(self):
+        """Start periodic cleanup."""
+        if self.running:
+            return
+            
+        self.running = True
+        self.stop_event.clear()
+        self.cleanup_thread = threading.Thread(target=self._cleanup_loop, daemon=True)
+        self.cleanup_thread.start()
+        logger.info(f"Started periodic cleanup every {self.interval_hours} hours")
+        
+        # Register cleanup on exit
+        atexit.register(self.stop)
+        
+    def stop(self):
+        """Stop periodic cleanup."""
+        if not self.running:
+            return
+            
+        self.running = False
+        self.stop_event.set()
+        
+        if self.cleanup_thread and self.cleanup_thread.is_alive():
+            self.cleanup_thread.join(timeout=5.0)
+            
+        logger.info("Stopped periodic cleanup")
+        
+    def _cleanup_loop(self):
+        """Main cleanup loop."""
+        while not self.stop_event.wait(self.interval_hours * 3600):
+            try:
+                self._perform_cleanup()
+            except Exception as e:
+                logger.error(f"Periodic cleanup failed: {e}")
+                
+    def _perform_cleanup(self):
+        """Perform cleanup operations."""
+        if not self.app:
+            return
+            
+        with self.app.app_context():
+            try:
+                results = {
+                    'temp_files_cleaned': 0,
+                    'preview_files_cleaned': 0,
+                    'global_resources_cleaned': {}
+                }
+                
+                # Clean up old temporary files
+                import tempfile
+                temp_dir = Path(tempfile.gettempdir())
+                patterns = ['blender_script_*', 'blender_*', 'tmp*_preview.png']
+                
+                for pattern in patterns:
+                    cleaned = cleanup_old_temp_files(temp_dir, pattern, 24)
+                    results['temp_files_cleaned'] += cleaned
+                
+                # Clean up old preview files
+                if BLENDER_AVAILABLE and hasattr(self.app, 'preview_renderer'):
+                    preview_cleaned = self.app.preview_renderer.cleanup_old_previews(days=1)
+                    results['preview_files_cleaned'] = preview_cleaned
+                    
+                    # Also cleanup blender executor temp files
+                    blender_cleaned = self.app.blender_executor.cleanup_temp_files(24)
+                    results['temp_files_cleaned'] += blender_cleaned
+                
+                # Clean up global resources (processes, tracked files)
+                results['global_resources_cleaned'] = cleanup_all_resources()
+                
+                if any(results.values()):
+                    logger.info(f"Periodic cleanup completed: {results}")
+                    
+            except Exception as e:
+                logger.error(f"Cleanup operation failed: {e}")
+
+
+# Global cleanup manager
+cleanup_manager = PeriodicCleanupManager()
 
 
 def create_app(config: Dict[str, Any] = None) -> Flask:
@@ -197,6 +300,36 @@ def create_app(config: Dict[str, Any] = None) -> Flask:
     if config:
         app.config.update(config)
     
+    # Initialize periodic cleanup
+    cleanup_manager.app = app
+    cleanup_interval = int(os.environ.get('CLEANUP_INTERVAL_HOURS', '4'))
+    cleanup_manager.interval_hours = cleanup_interval
+    
+    # Perform initial cleanup on startup
+    try:
+        logger.info("Performing initial resource cleanup...")
+        with app.app_context():
+            import tempfile
+            temp_dir = Path(tempfile.gettempdir())
+            patterns = ['blender_script_*', 'blender_*', 'tmp*_preview.png']
+            total_cleaned = 0
+            
+            for pattern in patterns:
+                cleaned = cleanup_old_temp_files(temp_dir, pattern, 24)
+                total_cleaned += cleaned
+            
+            # Cleanup global resources
+            global_cleaned = cleanup_all_resources()
+            
+            if total_cleaned > 0 or any(global_cleaned.values()):
+                logger.info(f"Initial cleanup completed: {total_cleaned} temp files, {global_cleaned}")
+                
+    except Exception as e:
+        logger.warning(f"Initial cleanup failed: {e}")
+    
+    # Start periodic cleanup
+    cleanup_manager.start()
+    
     # Register routes
     register_routes(app)
     register_error_handlers(app)
@@ -228,6 +361,55 @@ def register_routes(app: Flask) -> None:
             'scene_export_available': SCENE_EXPORT_AVAILABLE,
             'blender_timeout': app.config['BLENDER_TIMEOUT']
         })
+    
+    @app.route('/api/cleanup', methods=['POST'])
+    def cleanup_resources():
+        """Cleanup temporary files and resources."""
+        try:
+            data = request.get_json() or {}
+            max_age_hours = data.get('max_age_hours', 24)
+            
+            results = {
+                'temp_files_cleaned': 0,
+                'preview_files_cleaned': 0,
+                'global_resources_cleaned': {}
+            }
+            
+            # Clean up old temporary files
+            import tempfile
+            temp_dir = Path(tempfile.gettempdir())
+            patterns = ['blender_script_*', 'blender_*', 'tmp*_preview.png']
+            
+            for pattern in patterns:
+                cleaned = cleanup_old_temp_files(temp_dir, pattern, max_age_hours)
+                results['temp_files_cleaned'] += cleaned
+            
+            # Clean up old preview files
+            if BLENDER_AVAILABLE and hasattr(app, 'preview_renderer'):
+                preview_cleaned = app.preview_renderer.cleanup_old_previews(days=max_age_hours/24)
+                results['preview_files_cleaned'] = preview_cleaned
+                
+                # Also cleanup blender executor temp files
+                blender_cleaned = app.blender_executor.cleanup_temp_files(max_age_hours)
+                results['temp_files_cleaned'] += blender_cleaned
+            
+            # Clean up global resources (processes, tracked files)
+            results['global_resources_cleaned'] = cleanup_all_resources()
+            
+            logger.info(f"Resource cleanup completed: {results}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'Cleanup completed successfully',
+                'results': results
+            })
+            
+        except Exception as e:
+            logger.error(f"Cleanup failed: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': f'Cleanup failed: {str(e)}'
+            }), 500
     
     @app.route('/api/generate', methods=['POST'])
     def generate_model():
@@ -1405,7 +1587,9 @@ def register_routes(app: Flask) -> None:
                             # Clean up temp file
                             try:
                                 os.unlink(script_path)
-                            except:
+                            except (OSError, FileNotFoundError) as e:
+                                # File cleanup failure is not critical, just log it
+                                logger.debug(f"Could not remove temporary script file {script_path}: {e}")
                                 pass
                                 
                     except Exception as e:

@@ -7,12 +7,20 @@ using Blender's rendering capabilities.
 
 import os
 import tempfile
+import logging
+import sys
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 
 from .executor import BlenderExecutor, BlenderExecutionError
 from .script_generator import ScriptGenerator, ScriptGenerationError
+
+# Add utils to path for resource manager
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from utils.resource_manager import cleanup_old_temp_files
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -302,7 +310,9 @@ print(f"Preview rendered successfully: {output_path}")
                 try:
                     file_path.unlink()
                     count += 1
-                except Exception:
+                except (OSError, FileNotFoundError) as e:
+                    # File may already be deleted or permission denied
+                    logger.debug(f"Could not delete old preview file {file_path}: {e}")
                     pass
         
         return count

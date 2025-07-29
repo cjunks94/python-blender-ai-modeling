@@ -51,12 +51,26 @@ coverage.xml
 *.log
 logs/
 
-# Environment variables
+# Environment variables and secrets
 .env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+secrets.json
+config/secrets.*
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+
+# API keys and credentials (extra safety)
+*api_key*
+*secret*
+*credential*
+*token*
 
 # macOS
 .DS_Store
@@ -74,11 +88,15 @@ Desktop.ini
 # Export files
 exports/
 output/
+previews/
 *.obj
 *.gltf
 *.glb
 *.stl
 *.ply
+*.png
+*.jpg
+*.jpeg
 
 # Temporary files
 tmp/

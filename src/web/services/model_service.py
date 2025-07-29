@@ -13,6 +13,7 @@ from typing import Dict, Any, Optional, Tuple
 
 from .dependency_manager import dependency_manager
 from ..config import config
+from ..security import ModelParameterValidator, ValidationError, SecurityError
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class ModelService:
     
     def validate_model_parameters(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Validate and sanitize model parameters.
+        Validate and sanitize model parameters using comprehensive security validation.
         
         Args:
             params: Raw model parameters from request
@@ -47,67 +48,15 @@ class ModelService:
             ModelGenerationError: If parameters are invalid
         """
         try:
-            # Required parameters
-            if 'object_type' not in params:
-                raise ModelGenerationError("Missing required parameter: object_type")
-            
-            object_type = params['object_type']
-            valid_types = ['cube', 'sphere', 'cylinder', 'plane']
-            if object_type not in valid_types:
-                raise ModelGenerationError(f"Invalid object_type. Must be one of: {valid_types}")
-            
-            # Validate and set defaults for numeric parameters
-            validated = {
-                'object_type': object_type,
-                'size': self._validate_numeric_param(params.get('size', 2.0), 'size', 0.1, 10.0),
-                'pos_x': self._validate_numeric_param(params.get('pos_x', 0.0), 'pos_x', -10.0, 10.0),
-                'pos_y': self._validate_numeric_param(params.get('pos_y', 0.0), 'pos_y', -10.0, 10.0),
-                'pos_z': self._validate_numeric_param(params.get('pos_z', 0.0), 'pos_z', -10.0, 10.0),
-                'rot_x': self._validate_numeric_param(params.get('rot_x', 0), 'rot_x', -180, 180),
-                'rot_y': self._validate_numeric_param(params.get('rot_y', 0), 'rot_y', -180, 180),
-                'rot_z': self._validate_numeric_param(params.get('rot_z', 0), 'rot_z', -180, 180),
-                'color': self._validate_color_param(params.get('color', '#0080FF')),
-                'metallic': self._validate_numeric_param(params.get('metallic', 0.0), 'metallic', 0.0, 1.0),
-                'roughness': self._validate_numeric_param(params.get('roughness', 0.5), 'roughness', 0.0, 1.0)
-            }
-            
-            # Optional emission parameters
-            if 'emission' in params and params['emission']:
-                validated['emission'] = self._validate_color_param(params['emission'])
-                validated['emission_strength'] = self._validate_numeric_param(
-                    params.get('emission_strength', 1.0), 'emission_strength', 0.0, 10.0
-                )
-            
-            return validated
-            
-        except (ValueError, TypeError) as e:
-            raise ModelGenerationError(f"Parameter validation error: {str(e)}")
+            # Use the comprehensive security validator
+            return ModelParameterValidator.validate_model_parameters(params)
+        except (ValidationError, SecurityError) as e:
+            logger.warning(f"Model parameter validation failed: {str(e)}")
+            raise ModelGenerationError(f"Invalid parameters: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected validation error: {str(e)}")
+            raise ModelGenerationError(f"Parameter validation failed: {str(e)}")
     
-    def _validate_numeric_param(self, value: Any, name: str, min_val: float, max_val: float) -> float:
-        """Validate a numeric parameter within range."""
-        try:
-            num_val = float(value)
-            if not (min_val <= num_val <= max_val):
-                raise ValueError(f"{name} must be between {min_val} and {max_val}")
-            return num_val
-        except (ValueError, TypeError):
-            raise ValueError(f"{name} must be a valid number")
-    
-    def _validate_color_param(self, color: str) -> str:
-        """Validate color parameter format."""
-        if not isinstance(color, str):
-            raise ValueError("Color must be a string")
-        
-        # Basic hex color validation
-        if not color.startswith('#') or len(color) != 7:
-            raise ValueError("Color must be in hex format (#RRGGBB)")
-        
-        try:
-            int(color[1:], 16)  # Validate hex digits
-        except ValueError:
-            raise ValueError("Invalid hex color format")
-        
-        return color
     
     def generate_model(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -241,10 +190,14 @@ class ModelService:
         if not dependency_manager.is_available('export'):
             raise ModelGenerationError("Export functionality not available")
         
-        format = format.lower()
-        valid_formats = ['obj', 'gltf', 'glb', 'stl']
-        if format not in valid_formats:
-            raise ModelGenerationError(f"Invalid format. Must be one of: {valid_formats}")
+        # Validate export parameters using security validator
+        try:
+            export_params = ModelParameterValidator.validate_export_parameters({
+                'format': format
+            })
+            format = export_params['format']
+        except (ValidationError, SecurityError) as e:
+            raise ModelGenerationError(f"Invalid export parameters: {str(e)}")
         
         try:
             # Get appropriate exporter

@@ -8,11 +8,15 @@ using Blender's export capabilities.
 import os
 import subprocess
 import tempfile
+import logging
+import time
 from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
 
 import sys
+
+logger = logging.getLogger(__name__)
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -203,8 +207,9 @@ try:
         apply_modifiers=True
     )
     print(f"STL export successful: {output_path}")
-except:
-    # Fallback to legacy export for older Blender versions
+except (AttributeError, TypeError) as e:
+    # Fallback to legacy export for older Blender versions or API changes
+    print(f"Modern STL export failed ({e}), trying legacy method...")
     try:
         bpy.ops.export_mesh.stl(
             filepath=r'{output_path}',
@@ -240,7 +245,9 @@ except:
                 try:
                     file_path.unlink()
                     count += 1
-                except Exception:
+                except (OSError, FileNotFoundError) as e:
+                    # File may already be deleted or permission denied
+                    logger.debug(f"Could not delete old export file {file_path}: {e}")
                     pass
         
         return count

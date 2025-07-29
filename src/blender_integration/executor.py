@@ -9,11 +9,24 @@ import subprocess
 import tempfile
 import os
 import time
+import logging
 from pathlib import Path
 from typing import Optional, List
 from dataclasses import dataclass
 import ast
 import re
+import sys
+
+# Add utils to path for resource manager
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from utils.resource_manager import (
+    ManagedTempFile, 
+    create_temp_script_file, 
+    execute_with_timeout,
+    cleanup_old_temp_files
+)
+
+logger = logging.getLogger(__name__)
 
 
 class BlenderExecutionError(Exception):
@@ -72,7 +85,7 @@ class BlenderExecutor:
     
     def execute_script(self, script_content: str, output_file: Optional[str] = None) -> BlenderExecutionResult:
         """
-        Execute a Blender Python script.
+        Execute a Blender Python script with automatic resource cleanup.
         
         Args:
             script_content: Python script to execute in Blender
@@ -87,59 +100,59 @@ class BlenderExecutor:
         # Validate script first
         self.validate_script(script_content)
         
-        # Create temporary script file
-        script_file = self._create_temp_script_file(script_content)
-        
-        try:
-            # Build Blender command
-            cmd = self._build_blender_command(script_file, output_file)
-            
-            # Execute command
+        # Use managed temporary script file with automatic cleanup
+        with create_temp_script_file(script_content, suffix='.py') as script_file:
             try:
-                result = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=self.timeout,
-                    check=False  # Don't raise exception on non-zero return code
-                )
+                # Build Blender command
+                cmd = self._build_blender_command(script_file, output_file)
                 
-                return BlenderExecutionResult(
-                    success=result.returncode == 0,
-                    return_code=result.returncode,
-                    stdout=result.stdout,
-                    stderr=result.stderr,
-                    output_file=output_file
-                )
+                # Execute command with managed process and timeout
+                try:
+                    result = execute_with_timeout(
+                        cmd,
+                        timeout=self.timeout,
+                        capture_output=True,
+                        text=True
+                    )
+                    
+                    return BlenderExecutionResult(
+                        success=result.returncode == 0,
+                        return_code=result.returncode,
+                        stdout=result.stdout or "",
+                        stderr=result.stderr or "",
+                        output_file=output_file
+                    )
+                    
+                except subprocess.TimeoutExpired as e:
+                    raise BlenderExecutionError(
+                        f"Blender execution timeout after {self.timeout} seconds", 
+                        error_type="timeout"
+                    )
                 
-            except subprocess.TimeoutExpired as e:
+                except FileNotFoundError as e:
+                    raise BlenderExecutionError(
+                        f"Blender executable not found at path: {self.blender_path}",
+                        error_type="not_found"
+                    )
+                
+                except PermissionError as e:
+                    raise BlenderExecutionError(
+                        f"Permission denied accessing Blender at path: {self.blender_path}",
+                        error_type="permission"
+                    )
+                
+                except MemoryError as e:
+                    raise BlenderExecutionError(
+                        "Insufficient memory to execute Blender script",
+                        error_type="memory"
+                    )
+                
+            except RuntimeError as e:
+                # Handle script file creation errors
                 raise BlenderExecutionError(
-                    f"Blender execution timeout after {self.timeout} seconds", 
-                    error_type="timeout"
+                    f"Failed to create temporary script file: {str(e)}",
+                    error_type="file_creation"
                 )
-            
-            except FileNotFoundError as e:
-                raise BlenderExecutionError(
-                    f"Blender executable not found at path: {self.blender_path}",
-                    error_type="not_found"
-                )
-            
-            except PermissionError as e:
-                raise BlenderExecutionError(
-                    f"Permission denied accessing Blender at path: {self.blender_path}",
-                    error_type="permission"
-                )
-            
-            except MemoryError as e:
-                raise BlenderExecutionError(
-                    "Insufficient memory to execute Blender script",
-                    error_type="memory"
-                )
-            
-        finally:
-            # Clean up temporary script file
-            if script_file.exists():
-                script_file.unlink()
     
     def validate_script(self, script_content: str) -> None:
         """
@@ -165,28 +178,28 @@ class BlenderExecutor:
         except IndentationError as e:
             raise BlenderScriptError(f"Invalid Python indentation: {e}", error_type="indentation")
     
-    def _create_temp_script_file(self, script_content: str) -> Path:
+    def cleanup_temp_files(self, max_age_hours: int = 24) -> int:
         """
-        Create a temporary Python script file.
+        Clean up old temporary files created by Blender operations.
         
         Args:
-            script_content: Python script content
+            max_age_hours: Maximum age of files to keep in hours
             
         Returns:
-            Path to temporary script file
+            Number of files cleaned up
         """
-        # Create temporary file
-        fd, temp_path = tempfile.mkstemp(suffix='.py', prefix='blender_script_')
+        temp_dir = Path(tempfile.gettempdir())
+        patterns = ['blender_script_*', 'blender_*', 'tmp*_preview.png']
         
-        try:
-            with os.fdopen(fd, 'w') as f:
-                f.write(script_content)
-        except Exception:
-            # If writing fails, clean up the file descriptor
-            os.close(fd)
-            raise
-        
-        return Path(temp_path)
+        total_cleaned = 0
+        for pattern in patterns:
+            cleaned = cleanup_old_temp_files(temp_dir, pattern, max_age_hours)
+            total_cleaned += cleaned
+            
+        if total_cleaned > 0:
+            logger.info(f"Cleaned up {total_cleaned} old temporary files")
+            
+        return total_cleaned
     
     def _build_blender_command(self, script_file: Path, output_file: Optional[str] = None) -> List[str]:
         """

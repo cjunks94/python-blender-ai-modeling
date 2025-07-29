@@ -213,8 +213,9 @@ try:
         export_selected_objects=True
     )
     print(f"OBJ export successful: {output_file}")
-except:
-    # Fallback to legacy export for older Blender versions
+except (AttributeError, TypeError) as e:
+    # Fallback to legacy export for older Blender versions or API changes
+    print(f"Modern OBJ export failed ({e}), trying legacy method...")
     bpy.ops.export_scene.obj(
         filepath=r'{output_file}',
         use_selection=True,

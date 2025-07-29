@@ -12,6 +12,7 @@ from typing import Dict, Any, Optional
 
 from .dependency_manager import dependency_manager
 from ..config import config
+from ..security import InputValidator, ValidationError, SecurityError
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class AIService:
     
     def validate_ai_request(self, data: Dict[str, Any], request_type: str = 'model') -> Dict[str, Any]:
         """
-        Validate AI generation request parameters.
+        Validate AI generation request parameters using comprehensive security validation.
         
         Args:
             data: Request data
@@ -47,36 +48,67 @@ class AIService:
         Raises:
             AIGenerationError: If parameters are invalid
         """
-        if 'description' not in data:
-            raise AIGenerationError('Missing required field: description')
-        
-        description = data['description'].strip()
-        if not description:
-            raise AIGenerationError('Description cannot be empty')
-        
-        # Basic security validation
-        if len(description) > 2000:
-            raise AIGenerationError('Description too long (max 2000 characters)')
-        
-        # Check for potentially harmful content
-        forbidden_terms = ['script', 'import', 'exec', 'eval', '__']
-        if any(term in description.lower() for term in forbidden_terms):
-            raise AIGenerationError('Description contains forbidden terms')
-        
-        validated = {
-            'description': description,
-            'preferred_style': data.get('preferred_style', 'realistic'),
-            'complexity': data.get('complexity', 'medium'),
-            'user_level': data.get('user_level', 'beginner')
-        }
-        
-        if request_type == 'scene':
-            validated.update({
-                'max_objects': min(int(data.get('max_objects', 5)), 8),  # Limit to 8 objects
-                'generate_models': data.get('generate_models', True)
-            })
-        
-        return validated
+        try:
+            # Use comprehensive security validator
+            validated = {}
+            
+            # Validate required description
+            validated['description'] = InputValidator.validate_string(
+                data.get('description'), 'description',
+                max_length=InputValidator.MAX_DESCRIPTION_LENGTH,
+                min_length=1
+            )
+            
+            # Validate optional style parameters
+            if 'preferred_style' in data:
+                validated['preferred_style'] = InputValidator.validate_enum(
+                    data['preferred_style'], 'preferred_style',
+                    ['realistic', 'cartoon', 'abstract', 'minimalist', 'stylized'],
+                    case_sensitive=False
+                )
+            else:
+                validated['preferred_style'] = 'realistic'
+            
+            if 'complexity' in data:
+                validated['complexity'] = InputValidator.validate_enum(
+                    data['complexity'], 'complexity',
+                    ['simple', 'medium', 'complex'],
+                    case_sensitive=False
+                )
+            else:
+                validated['complexity'] = 'medium'
+            
+            if 'user_level' in data:
+                validated['user_level'] = InputValidator.validate_enum(
+                    data['user_level'], 'user_level',
+                    ['beginner', 'intermediate', 'advanced'],
+                    case_sensitive=False
+                )
+            else:
+                validated['user_level'] = 'beginner'
+            
+            # Scene-specific validation
+            if request_type == 'scene':
+                if 'max_objects' in data:
+                    validated['max_objects'] = InputValidator.validate_numeric(
+                        data['max_objects'], 'max_objects',
+                        min_value=1, max_value=8, numeric_type=int
+                    )
+                else:
+                    validated['max_objects'] = 5
+                
+                validated['generate_models'] = InputValidator.validate_boolean(
+                    data.get('generate_models', True), 'generate_models'
+                )
+            
+            return validated
+            
+        except (ValidationError, SecurityError) as e:
+            logger.warning(f"AI request validation failed: {str(e)}")
+            raise AIGenerationError(f"Invalid request: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected AI validation error: {str(e)}")
+            raise AIGenerationError(f"Request validation failed: {str(e)}")
     
     def generate_ai_model(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -118,10 +150,19 @@ class AIService:
             )
             
             # Get AI response
-            ai_response = ai_client.generate_model(engineered_prompt)
+            ai_response = ai_client.generate_model_from_description(engineered_prompt)
+            
+            # Check if generation was successful
+            if not ai_response.success:
+                raise AIGenerationError(f"AI generation failed: {ai_response.error_message}")
             
             # Interpret and validate the response
-            model_params = model_interpreter.interpret_response(ai_response)
+            interpretation_result = model_interpreter.interpret_single_model(ai_response.model_data or {})
+            
+            if not interpretation_result.success or not interpretation_result.models:
+                raise AIGenerationError(f"AI interpretation failed: {interpretation_result.error_message}")
+            
+            model_params = interpretation_result.models[0]  # Get first model
             
             # Validate the generated script would be safe
             if 'script' in model_params:
@@ -139,9 +180,9 @@ class AIService:
                 'ai_info': {
                     'original_description': validated_data['description'],
                     'prompt_style': validated_data['preferred_style'],
-                    'reasoning': ai_response.get('reasoning', ''),
-                    'suggestions': ai_response.get('suggestions', []),
-                    'warnings': ai_response.get('warnings', [])
+                    'reasoning': getattr(ai_response, 'reasoning', ''),
+                    'suggestions': getattr(ai_response, 'suggestions', []),
+                    'warnings': getattr(ai_response, 'warnings', [])
                 },
                 'created_at': datetime.now().isoformat(),
                 'success': True
@@ -196,33 +237,37 @@ class AIService:
             )
             
             # Generate scene with AI
-            scene_response = ai_client.generate_scene(scene_prompt)
+            scene_response = ai_client.generate_complex_scene(scene_prompt, validated_data['max_objects'])
+            
+            # Check if generation was successful
+            if not scene_response.success:
+                raise AIGenerationError(f"Scene generation failed: {scene_response.error_message}")
+            
+            # Get scene data from response
+            scene_data = scene_response.model_data or {}
+            objects_data = scene_data.get('objects', [])
             
             # Validate scene safety
-            if 'objects' in scene_response:
-                for obj in scene_response['objects']:
-                    if 'script' in obj:
-                        is_safe, issues = script_validator.validate_script(obj['script'])
-                        if not is_safe:
-                            raise AIGenerationError(f"Scene object script failed validation: {issues}")
+            for obj in objects_data:
+                if 'script' in obj:
+                    is_safe, issues = script_validator.validate_script(obj['script'])
+                    if not is_safe:
+                        raise AIGenerationError(f"Scene object script failed validation: {issues}")
             
             # Create scene using scene manager
             scene_id = f"ai_scene_{uuid.uuid4().hex[:4]}"
-            scene = scene_manager.create_scene(
-                scene_id,
-                validated_data['description'],
-                scene_response.get('objects', [])
-            )
+            scene_name = scene_data.get('scene_name', validated_data['description'])
+            scene = scene_manager.create_scene(scene_id, scene_name, validated_data['description'])
             
             # Generate models if requested
             if validated_data['generate_models'] and self.blender_services:
-                self._generate_scene_models(scene, scene_response.get('objects', []))
+                self._generate_scene_models(scene, objects_data)
             
             return {
                 'scene_id': scene_id,
                 'name': scene.name,
                 'object_count': scene.object_count,
-                'ai_metadata': scene_response.get('metadata', {}),
+                'ai_metadata': scene_data.get('metadata', {}),
                 'success': True,
                 'created_at': datetime.now().isoformat()
             }

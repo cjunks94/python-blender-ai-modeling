@@ -245,17 +245,48 @@ class SceneManager:
         return self.active_scenes.get(scene_id)
     
     def list_scenes(self) -> List[Dict[str, Any]]:
-        """List all active scenes with basic info."""
-        return [
-            {
+        """List all scenes (both active and stored on disk)."""
+        scenes = []
+        
+        # Add active scenes first
+        for scene in self.active_scenes.values():
+            scenes.append({
                 'scene_id': scene.scene_id,
                 'name': scene.name,
                 'description': scene.description,
                 'object_count': scene.object_count,
                 'created_at': scene.created_at.isoformat()
-            }
-            for scene in self.active_scenes.values()
-        ]
+            })
+        
+        # Add scenes from disk that aren't already active
+        active_scene_ids = set(self.active_scenes.keys())
+        
+        try:
+            for scene_file in self.scenes_directory.glob("*.json"):
+                scene_id = scene_file.stem
+                
+                if scene_id not in active_scene_ids:
+                    try:
+                        with open(scene_file, 'r') as f:
+                            scene_data = json.load(f)
+                        
+                        scenes.append({
+                            'scene_id': scene_data.get('scene_id', scene_id),
+                            'name': scene_data.get('name', 'Unknown Scene'),
+                            'description': scene_data.get('description', ''),
+                            'object_count': len(scene_data.get('objects', [])),
+                            'created_at': scene_data.get('created_at', datetime.now().isoformat())
+                        })
+                    except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
+                        logger.warning(f"Failed to load scene {scene_id}: {e}")
+                        continue
+        
+        except Exception as e:
+            logger.error(f"Error scanning scenes directory: {e}")
+        
+        # Sort by creation date (newest first)
+        scenes.sort(key=lambda x: x['created_at'], reverse=True)
+        return scenes
     
     def save_scene(self, scene_id: str) -> bool:
         """

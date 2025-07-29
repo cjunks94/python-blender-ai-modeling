@@ -27,7 +27,7 @@ def list_scenes():
         
         scene_services = dependency_manager.get_service('scene_management')
         scene_manager_class = scene_services['manager_class']
-        scene_manager = scene_manager_class(scenes_dir=config.scenes_dir)
+        scene_manager = scene_manager_class(scenes_directory=config.scenes_dir)
         
         scenes = scene_manager.list_scenes()
         return jsonify({'scenes': scenes}), 200
@@ -50,7 +50,7 @@ def create_scene():
         
         scene_services = dependency_manager.get_service('scene_management')
         scene_manager_class = scene_services['manager_class']
-        scene_manager = scene_manager_class(scenes_dir=config.scenes_dir)
+        scene_manager = scene_manager_class(scenes_directory=config.scenes_dir)
         
         scene = scene_manager.create_scene(
             scene_id=data.get('scene_id'),
@@ -81,7 +81,7 @@ def get_scene(scene_id: str):
         
         scene_services = dependency_manager.get_service('scene_management')
         scene_manager_class = scene_services['manager_class']
-        scene_manager = scene_manager_class(scenes_dir=config.scenes_dir)
+        scene_manager = scene_manager_class(scenes_directory=config.scenes_dir)
         
         scene = scene_manager.load_scene(scene_id)
         if not scene:
@@ -111,7 +111,7 @@ def generate_scene_preview(scene_id: str):
         
         scene_services = dependency_manager.get_service('scene_management')
         scene_manager_class = scene_services['manager_class']
-        scene_manager = scene_manager_class(scenes_dir=config.scenes_dir)
+        scene_manager = scene_manager_class(scenes_directory=config.scenes_dir)
         
         scene = scene_manager.load_scene(scene_id)
         if not scene:
@@ -159,7 +159,7 @@ def validate_scene(scene_id: str):
         scene_manager_class = scene_services['manager_class']
         validator_class = scene_services['validator_class']
         
-        scene_manager = scene_manager_class(scenes_dir=config.scenes_dir)
+        scene_manager = scene_manager_class(scenes_directory=config.scenes_dir)
         validator = validator_class()
         
         scene = scene_manager.load_scene(scene_id)
@@ -200,7 +200,7 @@ def export_scene_api(scene_id: str):
         scene_manager_class = scene_services['manager_class']
         scene_exporter_class = scene_services['scene_exporter']
         
-        scene_manager = scene_manager_class(scenes_dir=config.scenes_dir)
+        scene_manager = scene_manager_class(scenes_directory=config.scenes_dir)
         scene = scene_manager.load_scene(scene_id)
         
         if not scene:
@@ -270,7 +270,7 @@ def compose_scene(scene_id: str):
         
         scene_services = dependency_manager.get_service('scene_management')
         scene_manager_class = scene_services['manager_class']
-        scene_manager = scene_manager_class(scenes_dir=config.scenes_dir)
+        scene_manager = scene_manager_class(scenes_directory=config.scenes_dir)
         
         scene = scene_manager.load_scene(scene_id)
         if not scene:

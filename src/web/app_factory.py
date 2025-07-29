@@ -120,7 +120,7 @@ def _initialize_services(app: Flask) -> None:
         if app.scene_management_available:
             scene_services = dependency_manager.get_service('scene_management')
             app.scene_manager = scene_services['manager_class'](
-                scenes_dir=config.scenes_dir
+                scenes_directory=config.scenes_dir
             )
             app.scene_validator = scene_services['validator_class']()
             

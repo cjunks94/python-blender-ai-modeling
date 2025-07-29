@@ -14,7 +14,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 try:
-    from web.app import create_app
+    from web.app_factory import create_app
+    from web.config import config
     from dotenv import load_dotenv
 except ImportError as e:
     print(f"Error importing modules: {e}")
@@ -52,16 +53,12 @@ def main() -> None:
         # Create Flask application
         app = create_app()
         
-        # Get configuration from environment
-        port = int(os.environ.get('PORT', 5000))
-        host = os.environ.get('HOST', '127.0.0.1')
-        debug = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
-        
-        logger.info(f"Starting web server on http://{host}:{port}")
+        # Use configuration from config module
+        logger.info(f"Starting web server on http://{config.host}:{config.port}")
         logger.info("Press Ctrl+C to stop the server")
         
         # Start the web server
-        app.run(host=host, port=port, debug=debug)
+        app.run(host=config.host, port=config.port, debug=app.config['DEBUG'])
         
     except KeyboardInterrupt:
         logger.info("Application interrupted by user")

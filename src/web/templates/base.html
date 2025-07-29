@@ -25,89 +25,15 @@
         }
     </script>
     
-    <!-- Custom CSS -->
-    <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .purple-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .ai-purple {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 1.0);
-            border: 1px solid rgba(229, 231, 235, 1);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        
-        .dark .glass-effect {
-            background: rgba(31, 41, 55, 1.0);
-            border: 1px solid rgba(75, 85, 99, 1);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-        }
-        
-        .hover-scale {
-            transition: transform 0.2s ease-in-out;
-        }
-        
-        .hover-scale:hover {
-            transform: scale(1.05);
-        }
-        
-        /* Collapsible section styles */
-        .section-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
-        
-        .section-content.expanded {
-            max-height: 5000px;
-            transition: max-height 0.5s ease-in;
-        }
-        
-        .toggle-icon {
-            transition: transform 0.3s ease;
-        }
-        
-        .toggle-icon.expanded {
-            transform: rotate(180deg);
-        }
-        
-        .section-toggle.expanded {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-        
-        .dark .section-toggle.expanded {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-        
-        /* Range slider styles for dark mode */
-        .dark input[type="range"]::-webkit-slider-thumb {
-            @apply bg-blender-orange;
-        }
-        
-        .dark input[type="range"]::-moz-range-thumb {
-            @apply bg-blender-orange;
-        }
-        
-        /* Input field focus styles */
-        .dark input:focus, .dark select:focus, .dark textarea:focus {
-            @apply ring-2 ring-blender-orange ring-opacity-50;
-        }
-    </style>
+    <!-- Application Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
     
     {% block head %}{% endblock %}
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased transition-colors duration-200">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased transition-colors duration-200">
     <!-- Navigation -->
     <nav class="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
-        <div class="max-w-full mx-auto px-6 sm:px-12 lg:px-18">
+        <div class="nav-container">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center">
@@ -139,7 +65,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-full mx-auto py-6 px-6 sm:px-12 lg:px-18">
+    <main class="main-content nav-container py-6">
         {% block content %}{% endblock %}
     </main>
 
@@ -148,7 +74,7 @@
 
     <!-- Footer -->
     <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-16">
-        <div class="max-w-full mx-auto py-4 px-6 sm:px-12 lg:px-18">
+        <div class="nav-container py-4">
             <p class="text-center text-sm text-gray-500 dark:text-gray-400">
                 Python Blender AI Modeling v0.1.0 | Built with ❤️ and AI
             </p>

@@ -4,34 +4,42 @@
 
 {% block content %}
 <!-- Hero Section -->
-<div class="gradient-bg rounded-2xl text-white p-8 mb-8">
-    <div class="max-w-4xl mx-auto text-center">
-        <h1 class="text-4xl font-bold mb-4">Create 3D Models with AI</h1>
-        <p class="text-xl opacity-90 mb-6">
+<header class="hero" role="banner">
+    <div class="hero__content">
+        <h1 class="hero__title">Create 3D Models with AI</h1>
+        <p class="hero__subtitle">
             Generate stunning 3D models using Blender's power combined with AI intelligence
         </p>
-        <button id="get-started-btn" class="bg-white text-blue-600 font-semibold py-3 px-8 rounded-lg hover-scale shadow-lg">
+        <button id="get-started-btn" class="btn btn--outline btn--large hover-scale" 
+                aria-describedby="hero-description">
             Get Started
         </button>
+        <div id="hero-description" class="sr-only">
+            Scroll down to start creating 3D models using manual controls or AI assistance
+        </div>
     </div>
-</div>
+</header>
 
 <!-- Collapsible Sections -->
 <div class="space-y-4">
     <!-- Single Object Creation Section -->
-    <div class="collapsible-section bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <button type="button" class="section-toggle w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors rounded-t-xl" data-section="manual">
-            <div class="flex items-center">
-                <svg class="h-6 w-6 text-blender-orange mr-3" fill="currentColor" viewBox="0 0 24 24">
+    <section class="collapsible card" aria-labelledby="single-object-title">
+        <button type="button" 
+                class="collapsible__header w-full" 
+                data-section="manual"
+                aria-expanded="false"
+                aria-controls="manual-content">
+            <div class="collapsible__title">
+                <svg class="collapsible__icon text-blender-orange" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
-                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Single Object Creation</h2>
+                <h2 id="single-object-title">Single Object Creation</h2>
             </div>
-            <svg class="toggle-icon h-5 w-5 text-gray-500 dark:text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="collapsible__toggle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
         </button>
-        <div class="section-content" id="manual-content">
+        <div class="collapsible__content" id="manual-content">
         <div class="p-6 pt-0 grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Model Creation Panel -->
             <div class="lg:col-span-2">
@@ -45,196 +53,237 @@
             
             <form id="model-form" class="space-y-6">
                 <!-- Object Type Selection -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Object Type</label>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="object_type" value="cube" checked class="sr-only peer">
-                            <div class="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 transition-colors">
-                                <div class="w-8 h-8 bg-gray-300 dark:bg-gray-600 mx-auto mb-2 rounded"></div>
-                                <span class="text-sm font-medium dark:text-gray-200">Cube</span>
+                <fieldset class="form-group">
+                    <legend class="form-label mb-3">Object Type</legend>
+                    <div class="object-grid">
+                        <label class="object-option cursor-pointer">
+                            <input type="radio" name="object_type" value="cube" checked class="sr-only peer"
+                                   aria-describedby="cube-description">
+                            <div class="object-option__content">
+                                <div class="object-option__icon rounded"></div>
+                                <span class="object-option__label">Cube</span>
                             </div>
+                            <div id="cube-description" class="sr-only">Basic 3D cube primitive</div>
                         </label>
                         
-                        <label class="cursor-pointer">
-                            <input type="radio" name="object_type" value="sphere" class="sr-only peer">
-                            <div class="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 transition-colors">
-                                <div class="w-8 h-8 bg-gray-300 dark:bg-gray-600 mx-auto mb-2 rounded-full"></div>
-                                <span class="text-sm font-medium dark:text-gray-200">Sphere</span>
+                        <label class="object-option cursor-pointer">
+                            <input type="radio" name="object_type" value="sphere" class="sr-only peer"
+                                   aria-describedby="sphere-description">
+                            <div class="object-option__content">
+                                <div class="object-option__icon rounded-full"></div>
+                                <span class="object-option__label">Sphere</span>
                             </div>
+                            <div id="sphere-description" class="sr-only">Basic 3D sphere primitive</div>
                         </label>
                         
-                        <label class="cursor-pointer">
-                            <input type="radio" name="object_type" value="cylinder" class="sr-only peer">
-                            <div class="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 transition-colors">
-                                <div class="w-8 h-6 bg-gray-300 dark:bg-gray-600 mx-auto mb-2 rounded-sm"></div>
-                                <span class="text-sm font-medium dark:text-gray-200">Cylinder</span>
+                        <label class="object-option cursor-pointer">
+                            <input type="radio" name="object_type" value="cylinder" class="sr-only peer"
+                                   aria-describedby="cylinder-description">
+                            <div class="object-option__content">
+                                <div class="object-option__icon rounded-sm" style="height: 1.5rem;"></div>
+                                <span class="object-option__label">Cylinder</span>
                             </div>
+                            <div id="cylinder-description" class="sr-only">Basic 3D cylinder primitive</div>
                         </label>
                         
-                        <label class="cursor-pointer">
-                            <input type="radio" name="object_type" value="plane" class="sr-only peer">
-                            <div class="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 transition-colors">
-                                <div class="w-8 h-1 bg-gray-300 dark:bg-gray-600 mx-auto mb-3 rounded"></div>
-                                <span class="text-sm font-medium dark:text-gray-200">Plane</span>
+                        <label class="object-option cursor-pointer">
+                            <input type="radio" name="object_type" value="plane" class="sr-only peer"
+                                   aria-describedby="plane-description">
+                            <div class="object-option__content">
+                                <div class="object-option__icon rounded" style="height: 0.25rem; margin-bottom: 0.75rem;"></div>
+                                <span class="object-option__label">Plane</span>
                             </div>
+                            <div id="plane-description" class="sr-only">Basic 2D plane primitive</div>
                         </label>
                     </div>
-                </div>
+                </fieldset>
                 
                 <!-- Parameters -->
                 <div class="space-y-6">
                     <!-- Position and Size -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <!-- Size -->
-                        <div>
-                            <label for="size" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <div class="form-group">
+                            <label for="size" class="form-label">
                                 Size: <span id="size-value" class="text-blender-orange font-semibold">2.0</span>
                             </label>
                             <input type="range" id="size" name="size" min="0.1" max="10" step="0.1" value="2.0" 
-                                   class="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider">
+                                   class="form-input form-input--range"
+                                   aria-describedby="size-help">
                             <div class="flex text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 <span>0.1</span>
                                 <span class="ml-auto">10.0</span>
                             </div>
+                            <div id="size-help" class="sr-only">Adjust the size of the 3D object from 0.1 to 10 units</div>
                         </div>
                         
                         <!-- Position X -->
-                        <div>
-                            <label for="pos_x" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <div class="form-group">
+                            <label for="pos_x" class="form-label">
                                 Position X: <span id="pos-x-value" class="text-blender-orange font-semibold">0.0</span>
                             </label>
                             <input type="range" id="pos_x" name="pos_x" min="-10" max="10" step="0.1" value="0.0" 
-                                   class="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider">
+                                   class="form-input form-input--range"
+                                   aria-describedby="pos-x-help">
                             <div class="flex text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 <span>-10</span>
                                 <span class="ml-auto">10</span>
                             </div>
+                            <div id="pos-x-help" class="sr-only">Position the object along the X-axis from -10 to 10 units</div>
                         </div>
                     </div>
                     
                     <!-- Rotation Controls -->
-                    <div>
-                        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Rotation (degrees)</h4>
+                    <fieldset class="form-group">
+                        <legend class="form-label mb-3">Rotation (degrees)</legend>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <!-- Rotation X -->
-                            <div>
-                                <label for="rot_x" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                            <div class="form-group">
+                                <label for="rot_x" class="form-label form-label--small">
                                     X: <span id="rot-x-value" class="text-blender-orange font-semibold">0°</span>
                                 </label>
                                 <input type="range" id="rot_x" name="rot_x" min="-180" max="180" step="5" value="0" 
-                                       class="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider">
+                                       class="form-input form-input--range"
+                                       aria-describedby="rot-x-help">
                                 <div class="flex text-xs text-gray-400 mt-1">
                                     <span>-180°</span>
                                     <span class="ml-auto">180°</span>
                                 </div>
+                                <div id="rot-x-help" class="sr-only">Rotate object around X-axis from -180 to 180 degrees</div>
                             </div>
                             
                             <!-- Rotation Y -->
-                            <div>
-                                <label for="rot_y" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                            <div class="form-group">
+                                <label for="rot_y" class="form-label form-label--small">
                                     Y: <span id="rot-y-value" class="text-blender-orange font-semibold">0°</span>
                                 </label>
                                 <input type="range" id="rot_y" name="rot_y" min="-180" max="180" step="5" value="0" 
-                                       class="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider">
+                                       class="form-input form-input--range"
+                                       aria-describedby="rot-y-help">
                                 <div class="flex text-xs text-gray-400 mt-1">
                                     <span>-180°</span>
                                     <span class="ml-auto">180°</span>
                                 </div>
+                                <div id="rot-y-help" class="sr-only">Rotate object around Y-axis from -180 to 180 degrees</div>
                             </div>
                             
                             <!-- Rotation Z -->
-                            <div>
-                                <label for="rot_z" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                            <div class="form-group">
+                                <label for="rot_z" class="form-label form-label--small">
                                     Z: <span id="rot-z-value" class="text-blender-orange font-semibold">0°</span>
                                 </label>
                                 <input type="range" id="rot_z" name="rot_z" min="-180" max="180" step="5" value="0" 
-                                       class="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider">
+                                       class="form-input form-input--range"
+                                       aria-describedby="rot-z-help">
                                 <div class="flex text-xs text-gray-400 mt-1">
                                     <span>-180°</span>
                                     <span class="ml-auto">180°</span>
                                 </div>
+                                <div id="rot-z-help" class="sr-only">Rotate object around Z-axis from -180 to 180 degrees</div>
                             </div>
                         </div>
-                    </div>
+                    </fieldset>
                     
                     <!-- Material/Color Controls -->
-                    <div>
-                        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Material Settings</h4>
+                    <fieldset class="form-group">
+                        <legend class="form-label mb-3">Material Settings</legend>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <!-- Color Picker -->
-                            <div>
-                                <label for="color" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                            <div class="form-group">
+                                <label for="color" class="form-label form-label--small">
                                     Base Color
                                 </label>
                                 <div class="flex items-center space-x-3">
                                     <input type="color" id="color" name="color" value="#FF6F00" 
-                                           class="h-10 w-20 rounded border border-gray-300 dark:border-gray-600 cursor-pointer">
+                                           class="h-10 w-20 rounded border border-gray-300 dark:border-gray-600 cursor-pointer"
+                                           aria-describedby="color-help">
                                     <input type="text" id="color-hex" value="#FF6F00" readonly
-                                           class="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 dark:text-gray-200 rounded-lg text-sm">
+                                           class="form-input flex-1 bg-gray-50 dark:bg-gray-700 text-sm"
+                                           aria-label="Hex color value">
                                 </div>
+                                <div id="color-help" class="sr-only">Select the base color for the material</div>
                             </div>
                             
                             <!-- Metallic Slider -->
-                            <div>
-                                <label for="metallic" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                            <div class="form-group">
+                                <label for="metallic" class="form-label form-label--small">
                                     Metallic: <span id="metallic-value" class="text-blender-orange font-semibold">0.0</span>
                                 </label>
                                 <input type="range" id="metallic" name="metallic" min="0" max="1" step="0.1" value="0" 
-                                       class="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider">
+                                       class="form-input form-input--range"
+                                       aria-describedby="metallic-help">
                                 <div class="flex text-xs text-gray-400 mt-1">
                                     <span>Non-metallic</span>
                                     <span class="ml-auto">Metallic</span>
                                 </div>
+                                <div id="metallic-help" class="sr-only">Adjust the metallic property from 0 (non-metallic) to 1 (fully metallic)</div>
                             </div>
                             
                             <!-- Roughness Slider -->
-                            <div>
-                                <label for="roughness" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                            <div class="form-group">
+                                <label for="roughness" class="form-label form-label--small">
                                     Roughness: <span id="roughness-value" class="text-blender-orange font-semibold">0.5</span>
                                 </label>
                                 <input type="range" id="roughness" name="roughness" min="0" max="1" step="0.1" value="0.5" 
-                                       class="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider">
+                                       class="form-input form-input--range"
+                                       aria-describedby="roughness-help">
                                 <div class="flex text-xs text-gray-400 mt-1">
                                     <span>Smooth</span>
                                     <span class="ml-auto">Rough</span>
                                 </div>
+                                <div id="roughness-help" class="sr-only">Adjust surface roughness from 0 (smooth) to 1 (rough)</div>
                             </div>
                             
                             <!-- Emission Toggle -->
-                            <div>
+                            <div class="form-group">
                                 <label class="flex items-center space-x-3 cursor-pointer">
                                     <input type="checkbox" id="emission" name="emission" 
-                                           class="w-4 h-4 text-blender-orange bg-gray-100 border-gray-300 rounded focus:ring-blender-orange">
-                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Emission (Glow)</span>
+                                           class="w-4 h-4 text-blender-orange bg-gray-100 border-gray-300 rounded focus:ring-blender-orange"
+                                           aria-describedby="emission-help">
+                                    <span class="form-label form-label--small">Emission (Glow)</span>
                                 </label>
+                                <div id="emission-help" class="sr-only">Enable emission to make the object glow</div>
                                 <div id="emission-strength-container" class="mt-2 hidden">
-                                    <label for="emission-strength" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <label for="emission-strength" class="form-label form-label--small">
                                         Strength: <span id="emission-strength-value" class="text-blender-orange font-semibold">1.0</span>
                                     </label>
                                     <input type="range" id="emission-strength" name="emission_strength" min="0" max="10" step="0.5" value="1.0" 
-                                           class="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider">
+                                           class="form-input form-input--range"
+                                           aria-label="Emission strength">
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </fieldset>
                 </div>
                 
                 <!-- Generate Buttons -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button type="submit" class="w-full bg-blender-orange hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors hover-scale">
-                        <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="button-grid">
+                    <button type="submit" 
+                            class="btn btn--primary w-full"
+                            aria-describedby="generate-help">
+                        <svg class="icon mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                         </svg>
                         Generate Model
                     </button>
                     
-                    <button type="button" id="ai-generate-btn" class="w-full purple-gradient hover:opacity-90 text-white font-semibold py-3 px-6 rounded-lg transition-all hover-scale">
-                        <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="button" 
+                            id="ai-generate-btn" 
+                            class="btn btn--ai w-full"
+                            aria-describedby="ai-generate-help">
+                        <svg class="icon mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                         </svg>
                         AI Generate
                     </button>
+                </div>
+                
+                <!-- Help text for screen readers -->
+                <div id="generate-help" class="sr-only">
+                    Generate a 3D model using the current parameter settings
+                </div>
+                <div id="ai-generate-help" class="sr-only">
+                    Use AI to generate a 3D model based on a text description
                 </div>
             </form>
         </div>
@@ -329,35 +378,39 @@
 </div><!-- End Single Object Creation Section -->
 
     <!-- Scene Management Section -->
-    <div class="collapsible-section bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <button type="button" class="section-toggle w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors rounded-t-xl" data-section="scene">
-            <div class="flex items-center">
-                <svg class="h-6 w-6 text-indigo-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+    <section class="collapsible card" aria-labelledby="scene-management-title">
+        <button type="button" 
+                class="collapsible__header w-full" 
+                data-section="scene"
+                aria-expanded="false"
+                aria-controls="scene-content">
+            <div class="collapsible__title">
+                <svg class="collapsible__icon text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
                 </svg>
-                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Scene Management</h2>
+                <h2 id="scene-management-title">Scene Management</h2>
             </div>
-            <svg class="toggle-icon h-5 w-5 text-gray-500 dark:text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="collapsible__toggle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
         </button>
-        <div class="section-content" id="scene-content">
+        <div class="collapsible__content" id="scene-content">
             <div class="p-6">
                 {% include 'scene_management.html' %}
             </div>
         </div>
-    </div><!-- End Scene Section -->
+    </section><!-- End Scene Section -->
 </div><!-- End Collapsible Sections -->
 
 <!-- Progress Modal -->
-<div id="progress-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-    <div class="bg-white dark:bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4">
+<div id="progress-modal" class="modal modal--hidden" role="dialog" aria-labelledby="progress-title" aria-modal="true">
+    <div class="modal__content">
         <div class="text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blender-orange mx-auto mb-4"></div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Generating Model</h3>
+            <div class="spinner rounded-full h-12 w-12 border-b-2 border-blender-orange mx-auto mb-4"></div>
+            <h3 id="progress-title" class="modal__title mb-2">Generating Model</h3>
             <p class="text-gray-600 dark:text-gray-400 mb-4">Blender is processing your request...</p>
-            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div id="progress-bar" class="bg-blender-orange h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            <div class="progress">
+                <div id="progress-bar" class="progress__bar" style="width: 0%"></div>
             </div>
         </div>
     </div>
@@ -365,62 +418,67 @@
 
 
 <!-- AI Generation Modal -->
-<div id="ai-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-    <div class="bg-white dark:bg-gray-800 rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
-                <svg class="h-6 w-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<div id="ai-modal" class="modal modal--hidden" role="dialog" aria-labelledby="ai-modal-title" aria-modal="true">
+    <div class="modal__content max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="modal__header">
+            <h3 id="ai-modal-title" class="modal__title">
+                <svg class="icon--large text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                 </svg>
                 AI Model Generation
             </h3>
-            <button id="ai-modal-close" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="ai-modal-close" class="modal__close" aria-label="Close AI generation modal">
+                <svg class="icon--large" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
+                <span class="sr-only">Close</span>
             </button>
         </div>
         
         <form id="ai-form" class="space-y-6">
             <!-- Description Input -->
-            <div>
-                <label for="ai-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div class="form-group">
+                <label for="ai-description" class="form-label">
                     Describe what you want to create
                 </label>
                 <textarea id="ai-description" name="description" rows="4" 
-                          class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="Examples:&#10;• A glowing red sphere for a sci-fi scene&#10;• A wooden table with metal legs&#10;• An ancient stone pillar with moss&#10;• A futuristic glowing cube"></textarea>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Be descriptive! Include materials, colors, style, and purpose.</p>
+                          class="form-input form-textarea"
+                          placeholder="Examples:&#10;• A glowing red sphere for a sci-fi scene&#10;• A wooden table with metal legs&#10;• An ancient stone pillar with moss&#10;• A futuristic glowing cube"
+                          aria-describedby="ai-description-help"></textarea>
+                <p id="ai-description-help" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Be descriptive! Include materials, colors, style, and purpose.</p>
             </div>
             
             <!-- AI Settings -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                    <label for="ai-style" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Style</label>
-                    <select id="ai-style" name="preferred_style" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg px-3 py-2 text-sm">
+                <div class="form-group">
+                    <label for="ai-style" class="form-label">Style</label>
+                    <select id="ai-style" name="preferred_style" class="form-input" aria-describedby="ai-style-help">
                         <option value="creative">Creative</option>
                         <option value="precise">Precise</option>
                         <option value="artistic">Artistic</option>
                         <option value="architectural">Architectural</option>
                     </select>
+                    <div id="ai-style-help" class="sr-only">Choose the AI generation style for your object</div>
                 </div>
                 
-                <div>
-                    <label for="ai-complexity" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Complexity</label>
-                    <select id="ai-complexity" name="complexity" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg px-3 py-2 text-sm">
+                <div class="form-group">
+                    <label for="ai-complexity" class="form-label">Complexity</label>
+                    <select id="ai-complexity" name="complexity" class="form-input" aria-describedby="ai-complexity-help">
                         <option value="simple">Simple</option>
                         <option value="medium" selected>Medium</option>
                         <option value="complex">Complex</option>
                     </select>
+                    <div id="ai-complexity-help" class="sr-only">Set the complexity level for the generated object</div>
                 </div>
                 
-                <div>
-                    <label for="ai-user-level" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Experience</label>
-                    <select id="ai-user-level" name="user_level" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg px-3 py-2 text-sm">
+                <div class="form-group">
+                    <label for="ai-user-level" class="form-label">Experience</label>
+                    <select id="ai-user-level" name="user_level" class="form-input" aria-describedby="ai-user-level-help">
                         <option value="beginner">Beginner</option>
                         <option value="intermediate" selected>Intermediate</option>
                         <option value="expert">Expert</option>
                     </select>
+                    <div id="ai-user-level-help" class="sr-only">Indicate your experience level with 3D modeling</div>
                 </div>
             </div>
             
@@ -451,10 +509,10 @@
             
             <!-- Action Buttons -->
             <div class="flex justify-end space-x-3">
-                <button type="button" id="ai-cancel-btn" class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <button type="button" id="ai-cancel-btn" class="btn btn--outline">
                     Cancel
                 </button>
-                <button type="submit" id="ai-submit-btn" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+                <button type="submit" id="ai-submit-btn" class="btn btn--ai">
                     Generate with AI
                 </button>
             </div>

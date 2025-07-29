@@ -8,7 +8,8 @@ This web application provides an intuitive interface for generating 3D models by
 
 ### Key Features
 
-- **Modern Web UI**: Responsive interface with collapsible sections, dark theme support, and Tailwind CSS
+- **Modern Web UI**: Responsive interface with collapsible sections, dark theme support, and modern CSS architecture following BEM methodology
+- **Accessibility-First Design**: ARIA labels, semantic HTML, keyboard navigation, and screen reader support
 - **Single Object Creation**: Manual and AI-powered generation of cubes, spheres, cylinders, and planes
 - **Scene Management**: Multi-object scene creation, AI scene generation, and scene composition tools
 - **AI Integration**: Natural language 3D model and scene creation using Claude API
@@ -19,6 +20,7 @@ This web application provides an intuitive interface for generating 3D models by
 - **Dark Theme**: Complete dark mode support throughout the application
 - **Real-time Interaction**: Live parameter feedback, rotation controls, and material settings
 - **Security-First AI**: Comprehensive validation and safety checks for AI-generated content
+- **Resource Management**: Automatic cleanup of temporary files and background processes
 - **Modular Architecture**: Clean separation with single responsibility principle across all modules
 
 ## Prerequisites
@@ -53,9 +55,10 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Configure Blender path (IMPORTANT!)
-python setup_blender.py
-# This will find Blender and create a .env file
+# 4. Create environment file (copy and customize as needed)
+cp .env.example .env
+# Edit .env file to set your Blender path if needed:
+# BLENDER_EXECUTABLE_PATH=blender
 
 # 5. Optional: Configure AI (for natural language generation)
 export ANTHROPIC_API_KEY="your-claude-api-key-here"
@@ -353,6 +356,8 @@ pip-audit
 ### ✅ **Fully Implemented Features**
 
 - **Modern Web Interface**: Responsive UI built with HTML, Tailwind CSS, and vanilla JavaScript
+- **Accessibility Standards**: ARIA labels, semantic HTML, keyboard navigation, screen reader support
+- **CSS Architecture**: Clean, maintainable stylesheets following BEM methodology with CSS custom properties
 - **Multiple Object Types**: Complete support for cubes, spheres, cylinders, and planes
 - **Full Parameter Control**: Size, position (X,Y,Z), rotation (X,Y,Z), and material properties
 - **Material System**: Color picker, metallic/roughness sliders, emission effects with strength control
@@ -363,6 +368,7 @@ pip-audit
 - **Model Previews**: Automatic thumbnail generation using Blender's Cycles render engine
 - **Multi-Format Export**: Support for OBJ, GLTF/GLB, and STL formats
 - **Blender Integration**: Robust subprocess execution with comprehensive error handling
+- **Resource Management**: Automatic cleanup of temporary files and background processes
 - **Complete API**: REST endpoints for manual generation, AI generation, and scene planning
 - **Security-First Design**: Comprehensive validation for all AI-generated content
 - **Error Handling**: Categorized errors, retry mechanisms, and user-friendly messages

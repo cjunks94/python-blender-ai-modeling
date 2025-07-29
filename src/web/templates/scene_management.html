@@ -28,11 +28,12 @@
     <!-- Scene Selection and Creation -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Scene</label>
-                <select id="scene-select" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            <div class="form-group">
+                <label for="scene-select" class="form-label">Select Scene</label>
+                <select id="scene-select" class="form-input" aria-describedby="scene-select-help">
                     <option value="">Loading scenes...</option>
                 </select>
+                <div id="scene-select-help" class="sr-only">Choose an existing scene to load or manage</div>
             </div>
             
             <div id="selection-info" class="text-sm text-gray-600 dark:text-gray-400">
@@ -41,26 +42,29 @@
         </div>
         
         <div class="flex flex-col justify-center space-y-3">
-            <button id="create-scene-btn" class="w-full bg-blender-orange hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors hover-scale">
-                <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="create-scene-btn" class="btn btn--primary w-full" aria-describedby="create-scene-help">
+                <svg class="icon mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                 </svg>
                 Create New Scene
             </button>
+            <div id="create-scene-help" class="sr-only">Create a new empty scene to start building</div>
             
-            <button id="ai-scene-btn" class="w-full purple-gradient hover:opacity-90 text-white font-semibold py-3 px-6 rounded-lg transition-all hover-scale">
-                <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="ai-scene-btn" class="btn btn--ai w-full" aria-describedby="ai-scene-help">
+                <svg class="icon mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                 </svg>
                 Generate New Scene
             </button>
+            <div id="ai-scene-help" class="sr-only">Use AI to generate a complete scene based on your description</div>
             
-            <button id="validate-scene-btn" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors hover-scale" disabled>
-                <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="validate-scene-btn" class="btn btn--warning w-full" disabled aria-describedby="validate-scene-help">
+                <svg class="icon mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 Validate Scene
             </button>
+            <div id="validate-scene-help" class="sr-only">Check the current scene for errors and validate object positioning</div>
         </div>
     </div>
 
@@ -70,35 +74,41 @@
             <!-- Preview Actions -->
             <div class="flex items-center space-x-2">
                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Preview:</span>
-                <button id="generate-scene-preview-btn" class="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors hover-scale" disabled>
-                    <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="generate-scene-preview-btn" class="btn btn--info" disabled aria-describedby="preview-help">
+                    <svg class="icon mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                     Generate Preview
                 </button>
+                <div id="preview-help" class="sr-only">Generate a preview image of the current scene</div>
             </div>
             
             <!-- Export Actions -->
             <div class="flex items-center space-x-2">
                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Export:</span>
-                <button id="export-complete-btn" class="bg-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-700 transition-colors hover-scale" disabled>
-                    <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="export-complete-btn" class="btn btn--success" disabled aria-describedby="export-complete-help">
+                    <svg class="icon mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                     </svg>
                     Complete Scene
                 </button>
-                <button id="export-individual-btn" class="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors hover-scale" disabled>
-                    <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div id="export-complete-help" class="sr-only">Export the entire scene as a single file</div>
+                
+                <button id="export-individual-btn" class="btn btn--info" disabled aria-describedby="export-individual-help">
+                    <svg class="icon mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
                     </svg>
                     Individual Object
                 </button>
-                <button id="export-selective-btn" class="bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-orange-700 transition-colors hover-scale" disabled>
-                    <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div id="export-individual-help" class="sr-only">Export each object as separate files</div>
+                
+                <button id="export-selective-btn" class="btn btn--primary" disabled aria-describedby="export-selective-help">
+                    <svg class="icon mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m3 0v16a2 2 0 01-2 2H6a2 2 0 01-2-2V4h3m3 0v2a1 1 0 001 1h4a1 1 0 001-1V4h3m-9 4v8m4-8v8"/>
                     </svg>
                     Selected Objects
                 </button>
+                <div id="export-selective-help" class="sr-only">Export only the currently selected objects</div>
             </div>
             
             <!-- Composition Actions -->
@@ -317,30 +327,32 @@
         
         <form id="ai-scene-form" class="space-y-6">
             <!-- Scene Description Input -->
-            <div>
-                <label for="ai-scene-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div class="form-group">
+                <label for="ai-scene-description" class="form-label">
                     Describe the scene you want to create
                 </label>
                 <textarea id="ai-scene-description" name="description" rows="4" 
-                          class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                          placeholder="Examples:&#10;• A modern office desk with a laptop, coffee mug, and plant&#10;• A fantasy scene with a castle, trees, and mountains&#10;• A kitchen counter with fruits, bowls, and utensils&#10;• A sci-fi space station with geometric structures"></textarea>
-                <p class="text-xs text-gray-500 mt-1">Be descriptive! Include spatial relationships, materials, and the scene's purpose.</p>
+                          class="form-input form-textarea"
+                          placeholder="Examples:&#10;• A modern office desk with a laptop, coffee mug, and plant&#10;• A fantasy scene with a castle, trees, and mountains&#10;• A kitchen counter with fruits, bowls, and utensils&#10;• A sci-fi space station with geometric structures"
+                          aria-describedby="ai-scene-description-help"></textarea>
+                <p id="ai-scene-description-help" class="text-xs text-gray-500 mt-1">Be descriptive! Include spatial relationships, materials, and the scene's purpose.</p>
             </div>
             
             <!-- Scene Generation Settings -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                    <label for="ai-scene-complexity" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Complexity</label>
-                    <select id="ai-scene-complexity" name="complexity" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg px-3 py-2 text-sm">
+                <div class="form-group">
+                    <label for="ai-scene-complexity" class="form-label">Complexity</label>
+                    <select id="ai-scene-complexity" name="complexity" class="form-input" aria-describedby="ai-scene-complexity-help">
                         <option value="simple">Simple (2-3 objects)</option>
                         <option value="medium" selected>Medium (4-5 objects)</option>
                         <option value="complex">Complex (6-8 objects)</option>
                     </select>
+                    <div id="ai-scene-complexity-help" class="sr-only">Choose the complexity level for the generated scene</div>
                 </div>
                 
-                <div>
-                    <label for="ai-scene-max-objects" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Objects</label>
-                    <select id="ai-scene-max-objects" name="max_objects" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg px-3 py-2 text-sm">
+                <div class="form-group">
+                    <label for="ai-scene-max-objects" class="form-label">Max Objects</label>
+                    <select id="ai-scene-max-objects" name="max_objects" class="form-input" aria-describedby="ai-scene-max-objects-help">
                         <option value="3">3 objects</option>
                         <option value="4">4 objects</option>
                         <option value="5" selected>5 objects</option>
@@ -348,14 +360,16 @@
                         <option value="7">7 objects</option>
                         <option value="8">8 objects</option>
                     </select>
+                    <div id="ai-scene-max-objects-help" class="sr-only">Set the maximum number of objects in the scene</div>
                 </div>
                 
-                <div>
-                    <label for="ai-scene-mode" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Generation Mode</label>
-                    <select id="ai-scene-mode" name="generate_models" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg px-3 py-2 text-sm">
+                <div class="form-group">
+                    <label for="ai-scene-mode" class="form-label">Generation Mode</label>
+                    <select id="ai-scene-mode" name="generate_models" class="form-input" aria-describedby="ai-scene-mode-help">
                         <option value="true">Generate & Render</option>
                         <option value="false">Plan Only</option>
                     </select>
+                    <div id="ai-scene-mode-help" class="sr-only">Choose whether to generate and render models or just plan the scene</div>
                 </div>
             </div>
             
@@ -389,10 +403,10 @@
             
             <!-- Action Buttons -->
             <div class="flex justify-end space-x-3">
-                <button type="button" id="ai-scene-cancel-btn" class="font-semibold py-3 px-6 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors hover-scale">
+                <button type="button" id="ai-scene-cancel-btn" class="btn btn--outline">
                     Cancel
                 </button>
-                <button type="submit" id="ai-scene-submit-btn" class="font-semibold py-3 px-6 purple-gradient hover:opacity-90 text-white rounded-lg transition-all hover-scale">
+                <button type="submit" id="ai-scene-submit-btn" class="btn btn--ai">
                     Generate Scene with AI
                 </button>
             </div>

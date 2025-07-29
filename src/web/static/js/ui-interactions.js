@@ -233,7 +233,7 @@ class UIController {
     }
     
     setupCollapsibleSections() {
-        const sectionToggles = document.querySelectorAll('.section-toggle');
+        const sectionToggles = document.querySelectorAll('.collapsible__header');
         console.log('Setting up collapsible sections, found:', sectionToggles.length);
         
         sectionToggles.forEach(toggle => {
@@ -246,8 +246,10 @@ class UIController {
                 e.stopPropagation();
                 
                 const section = newToggle.getAttribute('data-section');
-                const content = document.getElementById(`${section}-content`);
-                const icon = newToggle.querySelector('.toggle-icon');
+                const content = newToggle.getAttribute('aria-controls') ? 
+                    document.getElementById(newToggle.getAttribute('aria-controls')) :
+                    document.getElementById(`${section}-content`);
+                const icon = newToggle.querySelector('.collapsible__toggle');
                 
                 if (!content) {
                     console.error('Content section not found:', `${section}-content`);
@@ -261,28 +263,29 @@ class UIController {
                 const height = content.scrollHeight;
                 content.style.display = '';
                 
-                // Toggle expanded state
-                const isExpanded = content.classList.contains('expanded');
+                // Toggle expanded state using CSS classes
+                const isExpanded = content.classList.contains('collapsible__content--expanded');
                 
                 if (isExpanded) {
                     // Collapse
-                    newToggle.classList.remove('expanded');
-                    icon.classList.remove('expanded');
-                    content.style.maxHeight = height + 'px';
-                    // Force reflow
-                    content.offsetHeight;
-                    content.classList.remove('expanded');
+                    newToggle.classList.remove('collapsible__header--expanded');
+                    newToggle.setAttribute('aria-expanded', 'false');
+                    icon?.classList.remove('collapsible__toggle--expanded');
+                    content.classList.remove('collapsible__content--expanded');
                     content.style.maxHeight = '0';
                     console.log('Collapsed section:', section);
                 } else {
                     // Expand
-                    newToggle.classList.add('expanded');
-                    icon.classList.add('expanded');
-                    content.classList.add('expanded');
+                    newToggle.classList.add('collapsible__header--expanded');
+                    newToggle.setAttribute('aria-expanded', 'true');
+                    icon?.classList.add('collapsible__toggle--expanded');
+                    content.classList.add('collapsible__content--expanded');
                     content.style.maxHeight = height + 'px';
                     // Remove inline style after transition
                     setTimeout(() => {
-                        content.style.maxHeight = '';
+                        if (content.classList.contains('collapsible__content--expanded')) {
+                            content.style.maxHeight = '';
+                        }
                     }, 500);
                     console.log('Expanded section:', section);
                     

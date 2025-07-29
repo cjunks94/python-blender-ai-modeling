@@ -13,6 +13,7 @@ from .config import config
 from .services.dependency_manager import dependency_manager
 from .routes.api_routes import register_api_routes
 from .routes.ai_routes import register_ai_routes
+from .routes.scene_routes import register_scene_routes
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +160,10 @@ def _register_routes(app: Flask) -> None:
     # Register AI routes if AI is available
     if dependency_manager.is_available('ai'):
         register_ai_routes(app)
+    
+    # Register scene routes if scene management is available
+    if dependency_manager.is_available('scene_management'):
+        register_scene_routes(app)
     
     logger.info("All routes registered successfully")
 

@@ -403,6 +403,62 @@ Prioritize accuracy and engineering principles over artistic interpretation.
             examples=[]
         )
     
+    def create_model_prompt(self, description: str, style: str = "realistic", 
+                           complexity: str = "medium", user_level: str = "beginner") -> str:
+        """
+        Create an optimized prompt for AI model generation.
+        
+        Args:
+            description: User's model description
+            style: Preferred style (realistic, creative, etc.)
+            complexity: Complexity level (simple, medium, complex)
+            user_level: User experience level
+            
+        Returns:
+            Optimized prompt for AI model generation
+        """
+        # Optimize the user input first
+        optimized = self.optimize_user_input(description, {
+            'style': style,
+            'complexity': complexity,
+            'user_level': user_level,
+            'task': 'model_generation'
+        })
+        
+        return optimized.get('enhanced_prompt', description)
+    
+    def create_scene_prompt(self, description: str, max_objects: int = 5, 
+                           complexity: str = "medium") -> str:
+        """
+        Create an optimized prompt for AI scene generation.
+        
+        Args:
+            description: User's scene description
+            max_objects: Maximum number of objects in scene
+            complexity: Complexity level
+            
+        Returns:
+            Optimized prompt for AI scene generation
+        """
+        # Enhance the description for scene generation
+        enhanced_description = self.enhance_for_scene_generation(description, complexity)
+        
+        # Add scene-specific constraints
+        scene_prompt = f"""Create a 3D scene with the following requirements:
+
+Scene Description: {enhanced_description}
+
+Constraints:
+- Maximum {max_objects} objects
+- Complexity level: {complexity}
+- Objects should have realistic spatial relationships
+- Include appropriate materials and colors
+- Consider lighting and composition
+
+Please generate a scene with objects that work well together and create a cohesive composition."""
+
+        return scene_prompt
+    
     def _format_constraints(self, constraints: Dict[str, Any]) -> str:
         """Format constraints for inclusion in prompts."""
         formatted = []

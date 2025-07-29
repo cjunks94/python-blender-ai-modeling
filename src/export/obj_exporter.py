@@ -11,6 +11,11 @@ import os
 from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from blender_integration.executor import BlenderExecutor, BlenderExecutionError
+from blender_integration.script_generator import ScriptGenerator, ScriptGenerationError
 
 
 class ExportError(Exception):
@@ -47,6 +52,8 @@ class OBJExporter:
         self.create_dir_if_missing = create_dir_if_missing
         self.blender_path = blender_path
         self.timeout = timeout
+        self.blender_executor = BlenderExecutor(blender_path, timeout)
+        self.script_generator = ScriptGenerator()
     
     def export_obj(self, model_id: str, model_params: Dict[str, Any]) -> ExportResult:
         """
@@ -80,9 +87,9 @@ class OBJExporter:
         
         # Execute Blender script
         try:
-            result = self._execute_blender_script(script_content)
+            result = self.blender_executor.execute_script(script_content)
             
-            if result.returncode != 0:
+            if not result.success:
                 raise ExportError(f"Blender export failed: {result.stderr}")
             
             # Verify output file was created
@@ -100,13 +107,8 @@ class OBJExporter:
                 file_size=file_size
             )
             
-        except (FileNotFoundError, subprocess.TimeoutExpired, subprocess.CalledProcessError) as e:
-            if isinstance(e, FileNotFoundError):
-                raise ExportError(f"Blender executable not found: {self.blender_path}")
-            elif isinstance(e, subprocess.TimeoutExpired):
-                raise ExportError(f"Export timeout after {self.timeout} seconds")
-            else:
-                raise ExportError(f"Blender execution error: {e}")
+        except BlenderExecutionError as e:
+            raise ExportError(f"Blender execution error: {str(e)}")
     
     def _validate_model_params(self, model_params: Dict[str, Any]) -> None:
         """
@@ -122,66 +124,106 @@ class OBJExporter:
         if 'object_type' not in model_params:
             raise ExportError("Missing required parameter: object_type")
         
-        # Validate object type (currently only cube is supported)
-        valid_types = ['cube']
+        # Validate object type
+        valid_types = ['cube', 'sphere', 'cylinder', 'plane']
         if model_params['object_type'] not in valid_types:
             raise ExportError(f"Unsupported object type: {model_params['object_type']}. "
                             f"Supported types: {valid_types}")
         
-        # Check required parameters for cube
-        if model_params['object_type'] == 'cube':
-            required_params = ['size']
-            for param in required_params:
-                if param not in model_params:
-                    raise ExportError(f"Missing required parameter for cube: {param}")
+        # Check required parameters (size is required for all object types)
+        if 'size' not in model_params:
+            raise ExportError("Missing required parameter: size")
     
     def _generate_export_script(self, model_params: Dict[str, Any], output_file: str) -> str:
         """
-        Generate Blender Python script for creating and exporting model.
+        Generate complete Blender script for model creation and OBJ export.
         
         Args:
-            model_params: Parameters describing the model
-            output_file: Path where to save the exported file
+            model_params: Parameters for model generation
+            output_file: Path where OBJ file should be saved
             
         Returns:
-            Complete Blender Python script as string
-            
-        Raises:
-            ExportError: If object type is not supported
+            Complete Blender Python script
         """
-        object_type = model_params['object_type']
+        # First, generate the model creation script
+        object_type = model_params.get('object_type', 'cube')
         
+        # Extract parameters
+        size = model_params.get('size', 2.0)
+        pos_x = model_params.get('pos_x', 0.0)
+        position = (pos_x, 0, 0)
+        
+        # Extract rotation if present
+        rotation = None
+        if 'rotation' in model_params:
+            rot = model_params['rotation']
+            import math
+            rotation = (
+                math.radians(rot.get('x', 0)),
+                math.radians(rot.get('y', 0)),
+                math.radians(rot.get('z', 0))
+            )
+        
+        # Extract material if present
+        material = None
+        if any(k in model_params for k in ['color', 'metallic', 'roughness', 'emission']):
+            material = {}
+            for key in ['color', 'metallic', 'roughness', 'emission', 'emission_strength']:
+                if key in model_params:
+                    material[key] = model_params[key]
+        
+        # Generate object creation script based on type
         if object_type == 'cube':
-            return self._generate_cube_export_script(model_params, output_file)
+            model_script = self.script_generator.generate_cube_script(
+                size=size, position=position, rotation=rotation, material=material
+            )
+        elif object_type == 'sphere':
+            model_script = self.script_generator.generate_sphere_script(
+                radius=size, position=position, rotation=rotation, material=material
+            )
+        elif object_type == 'cylinder':
+            model_script = self.script_generator.generate_cylinder_script(
+                radius=size, depth=size*2, position=position, rotation=rotation, material=material
+            )
+        elif object_type == 'plane':
+            model_script = self.script_generator.generate_plane_script(
+                size=size, position=position, rotation=rotation, material=material
+            )
         else:
-            raise ExportError(f"Export script generation not implemented for: {object_type}")
-    
-    def _generate_cube_export_script(self, model_params: Dict[str, Any], output_file: str) -> str:
-        """Generate export script for cube object."""
-        size = model_params['size']
+            raise ExportError(f"Unsupported object type: {object_type}")
         
-        # Get position parameters with defaults
-        pos_x = model_params.get('pos_x', 0)
-        pos_y = model_params.get('pos_y', 0)
-        pos_z = model_params.get('pos_z', 0)
+        # Add OBJ export commands
+        export_commands = f'''
+
+# Export to OBJ
+import bpy
+
+# Select all mesh objects
+bpy.ops.object.select_all(action='DESELECT')
+for obj in bpy.data.objects:
+    if obj.type == 'MESH':
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+
+# Export to OBJ
+try:
+    bpy.ops.wm.obj_export(
+        filepath=r'{output_file}',
+        export_materials=True,
+        export_selected_objects=True
+    )
+    print(f"OBJ export successful: {output_file}")
+except:
+    # Fallback to legacy export for older Blender versions
+    bpy.ops.export_scene.obj(
+        filepath=r'{output_file}',
+        use_selection=True,
+        use_materials=True
+    )
+    print(f"OBJ export successful (legacy): {output_file}")
+'''
         
-        script_parts = [
-            "import bpy",
-            "",
-            "# Clear existing objects",
-            "bpy.ops.object.select_all(action='SELECT')",
-            "bpy.ops.object.delete(use_global=False)",
-            "",
-            "# Create cube",
-            f"bpy.ops.mesh.primitive_cube_add(size={size}, location=({pos_x}, {pos_y}, {pos_z}))",
-            "",
-            "# Export to OBJ",
-            f'bpy.ops.export_scene.obj(filepath="{output_file}", use_selection=False)',
-            "",
-            'print("OBJ export completed successfully")'
-        ]
-        
-        return "\n".join(script_parts)
+        return model_script + export_commands
     
     def _build_output_filepath(self, model_id: str, format_ext: str) -> Path:
         """
@@ -200,46 +242,3 @@ class OBJExporter:
     def _create_output_directory(self) -> None:
         """Create output directory if it doesn't exist."""
         self.output_dir.mkdir(parents=True, exist_ok=True)
-    
-    def _execute_blender_script(self, script_content: str) -> subprocess.CompletedProcess:
-        """
-        Execute Blender script via subprocess.
-        
-        Args:
-            script_content: Python script to execute in Blender
-            
-        Returns:
-            Subprocess result
-            
-        Raises:
-            Various subprocess exceptions
-        """
-        # Create temporary script file
-        fd, temp_path = tempfile.mkstemp(suffix='.py', prefix='export_script_')
-        
-        try:
-            with os.fdopen(fd, 'w') as f:
-                f.write(script_content)
-            
-            # Build Blender command
-            cmd = [
-                self.blender_path,
-                '--background',  # Run without UI
-                '--python', temp_path
-            ]
-            
-            # Execute command
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=self.timeout,
-                check=False  # Don't raise exception on non-zero return code
-            )
-            
-            return result
-            
-        finally:
-            # Clean up temporary script file
-            if os.path.exists(temp_path):
-                os.unlink(temp_path)

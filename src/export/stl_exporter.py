@@ -195,16 +195,27 @@ bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
 
 # Export to STL
 try:
-    bpy.ops.export_mesh.stl(
+    # Try new Blender 4.5 syntax first
+    bpy.ops.wm.stl_export(
         filepath=r'{output_path}',
-        use_selection=True,
-        ascii={'true' if ascii_format else 'false'},
+        export_selected_objects=True,
+        ascii_format={ascii_format},
         apply_modifiers=True
     )
     print(f"STL export successful: {output_path}")
-except Exception as e:
-    print(f"STL export failed: {{e}}")
-    raise
+except:
+    # Fallback to legacy export for older Blender versions
+    try:
+        bpy.ops.export_mesh.stl(
+            filepath=r'{output_path}',
+            use_selection=True,
+            ascii={ascii_format},
+            apply_modifiers=True
+        )
+        print(f"STL export successful (legacy): {output_path}")
+    except Exception as e:
+        print(f"STL export failed: {{e}}")
+        raise
 '''
         
         return model_script + export_commands

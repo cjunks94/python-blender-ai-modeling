@@ -220,7 +220,7 @@ class ScriptGenerator:
         
         # Add sphere creation
         script_parts.append("# Create sphere")
-        sphere_command = f"bpy.ops.mesh.primitive_uv_sphere_add(radius={radius}, location={self._format_vector(position)}, subdivisions={subdivisions})"
+        sphere_command = f"bpy.ops.mesh.primitive_uv_sphere_add(radius={radius}, location={self._format_vector(position)}, segments={subdivisions})"
         script_parts.append(sphere_command)
         
         # Add rotation if specified

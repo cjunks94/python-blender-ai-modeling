@@ -196,7 +196,6 @@ export_settings = {{
     'filepath': r'{output_path}',
     'export_format': '{"GLB" if binary else "GLTF_SEPARATE"}',
     'export_materials': 'EXPORT',
-    'export_colors': True,
     'export_attributes': True,
     'use_selection': True,
     'export_yup': True,

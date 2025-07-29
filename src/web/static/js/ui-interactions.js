@@ -12,7 +12,7 @@ class UIController {
         this.setupHelpButton();
         this.setupGetStartedButton();
         this.setupKeyboardShortcuts();
-        this.setupTabSwitching();
+        this.setupCollapsibleSections();
         
         console.log('UI Controller initialized');
     }
@@ -232,41 +232,56 @@ class UIController {
         });
     }
     
-    setupTabSwitching() {
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabPanels = document.querySelectorAll('.tab-panel');
+    setupCollapsibleSections() {
+        const sectionToggles = document.querySelectorAll('.section-toggle');
         
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const targetTab = button.getAttribute('data-tab');
+        sectionToggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const section = toggle.getAttribute('data-section');
+                const content = document.getElementById(`${section}-content`);
+                const icon = toggle.querySelector('.toggle-icon');
                 
-                // Update active states
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                tabPanels.forEach(panel => panel.classList.remove('active'));
+                // Toggle expanded state
+                const isExpanded = toggle.classList.contains('expanded');
                 
-                // Set active tab
-                button.classList.add('active');
-                const targetPanel = document.getElementById(`${targetTab}-tab`);
-                if (targetPanel) {
-                    targetPanel.classList.add('active');
+                if (isExpanded) {
+                    // Collapse
+                    toggle.classList.remove('expanded');
+                    content.classList.remove('expanded');
+                    icon.classList.remove('expanded');
+                } else {
+                    // Expand
+                    toggle.classList.add('expanded');
+                    content.classList.add('expanded');
+                    icon.classList.add('expanded');
+                    
+                    // Initialize scene management if expanding scene section
+                    if (section === 'scene' && window.sceneManager) {
+                        window.sceneManager.loadScenes();
+                    }
                 }
                 
-                // Save preference
-                localStorage.setItem('activeTab', targetTab);
-                
-                // Initialize scene management if switching to scene tab
-                if (targetTab === 'scene' && window.sceneManager) {
-                    window.sceneManager.loadScenes();
-                }
+                // Save state
+                const sectionStates = this.getSectionStates();
+                sectionStates[section] = !isExpanded;
+                localStorage.setItem('sectionStates', JSON.stringify(sectionStates));
             });
         });
         
-        // Restore last active tab
-        const savedTab = localStorage.getItem('activeTab') || 'manual';
-        const savedButton = document.querySelector(`.tab-button[data-tab="${savedTab}"]`);
-        if (savedButton) {
-            savedButton.click();
-        }
+        // Restore section states (all collapsed by default)
+        const savedStates = this.getSectionStates();
+        sectionToggles.forEach(toggle => {
+            const section = toggle.getAttribute('data-section');
+            if (savedStates[section]) {
+                // If saved as expanded, trigger click to expand
+                toggle.click();
+            }
+        });
+    }
+    
+    getSectionStates() {
+        const saved = localStorage.getItem('sectionStates');
+        return saved ? JSON.parse(saved) : {};
     }
 }
 

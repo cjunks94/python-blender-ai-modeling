@@ -16,44 +16,32 @@
     </div>
 </div>
 
-<!-- Tab Navigation -->
-<div class="mb-6 border-b border-gray-200 dark:border-gray-700">
-    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-        <button type="button" class="tab-button active" data-tab="manual">
-            <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+<!-- Collapsible Sections -->
+<div class="space-y-4">
+    <!-- Manual Creation Section -->
+    <div class="collapsible-section bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <button type="button" class="section-toggle w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors rounded-t-xl" data-section="manual">
+            <div class="flex items-center">
+                <svg class="h-6 w-6 text-blender-orange mr-3" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Manual Creation</h2>
+            </div>
+            <svg class="toggle-icon h-5 w-5 text-gray-500 dark:text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
-            Manual Creation
         </button>
-        <button type="button" class="tab-button" data-tab="ai">
-            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-            </svg>
-            AI Generation
-        </button>
-        <button type="button" class="tab-button" data-tab="scene">
-            <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-            </svg>
-            Scene Management
-        </button>
-    </nav>
-</div>
-
-<!-- Tab Content -->
-<div class="tab-content">
-    <!-- Manual Creation Tab -->
-    <div id="manual-tab" class="tab-panel active">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="section-content hidden" id="manual-content">
+        <div class="p-6 pt-0 grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Model Creation Panel -->
             <div class="lg:col-span-2">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
-                        <svg class="h-6 w-6 text-blender-orange mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <div class="rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
+                        <svg class="h-5 w-5 text-blender-orange mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                         </svg>
                         Create 3D Object
-                    </h2>
+                    </h3>
             
             <form id="model-form" class="space-y-6">
                 <!-- Object Type Selection -->
@@ -78,17 +66,17 @@
                         
                         <label class="cursor-pointer">
                             <input type="radio" name="object_type" value="cylinder" class="sr-only peer">
-                            <div class="p-4 border-2 border-gray-200 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 transition-colors">
-                                <div class="w-8 h-6 bg-gray-300 mx-auto mb-2 rounded-sm"></div>
-                                <span class="text-sm font-medium">Cylinder</span>
+                            <div class="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 transition-colors">
+                                <div class="w-8 h-6 bg-gray-300 dark:bg-gray-600 mx-auto mb-2 rounded-sm"></div>
+                                <span class="text-sm font-medium dark:text-gray-200">Cylinder</span>
                             </div>
                         </label>
                         
                         <label class="cursor-pointer">
                             <input type="radio" name="object_type" value="plane" class="sr-only peer">
-                            <div class="p-4 border-2 border-gray-200 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 transition-colors">
-                                <div class="w-8 h-1 bg-gray-300 mx-auto mb-3 rounded"></div>
-                                <span class="text-sm font-medium">Plane</span>
+                            <div class="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-center hover:border-blender-orange peer-checked:border-blender-orange peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 transition-colors">
+                                <div class="w-8 h-1 bg-gray-300 dark:bg-gray-600 mx-auto mb-3 rounded"></div>
+                                <span class="text-sm font-medium dark:text-gray-200">Plane</span>
                             </div>
                         </label>
                     </div>
@@ -246,7 +234,7 @@
     <!-- Status & Export Panel -->
     <div class="space-y-6">
         <!-- Status Panel -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="rounded-xl p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                 <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -267,7 +255,7 @@
         </div>
         
         <!-- Preview Panel -->
-        <div id="preview-panel" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hidden">
+        <div id="preview-panel" class="rounded-xl p-6 hidden">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                 <svg class="h-5 w-5 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -301,7 +289,7 @@
         </div>
         
         <!-- Export Panel -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="rounded-xl p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                 <svg class="h-5 w-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -328,36 +316,64 @@
         </div>
     </div>
 </div>
-</div><!-- End Manual Tab -->
+</div>
+</div><!-- End Manual Section -->
 
-<!-- AI Generation Tab -->
-<div id="ai-tab" class="tab-panel">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
-            <svg class="h-6 w-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+    <!-- AI Generation Section -->
+    <div class="collapsible-section bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <button type="button" class="section-toggle w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors rounded-t-xl" data-section="ai">
+            <div class="flex items-center">
+                <svg class="h-6 w-6 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">AI Generation</h2>
+            </div>
+            <svg class="toggle-icon h-5 w-5 text-gray-500 dark:text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
-            AI Model Generation
-        </h2>
-        
-        <div class="text-center py-12">
-            <svg class="h-24 w-24 text-purple-200 dark:text-purple-700 mx-auto mb-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-            </svg>
-            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">AI Generation Coming Soon</h3>
-            <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-                Describe what you want to create in natural language and let AI generate the 3D model for you.
-            </p>
+        </button>
+        <div class="section-content hidden" id="ai-content">
+            <div class="p-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
+                    <svg class="h-5 w-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    AI Model Generation
+                </h3>
+                
+                <div class="text-center py-12">
+                    <svg class="h-24 w-24 text-purple-200 dark:text-purple-700 mx-auto mb-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">AI Generation Coming Soon</h3>
+                    <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                        Describe what you want to create in natural language and let AI generate the 3D model for you.
+                    </p>
+                </div>
+            </div>
         </div>
-    </div>
-</div><!-- End AI Tab -->
-
-<!-- Scene Management Tab -->
-<div id="scene-tab" class="tab-panel">
-    {% include 'scene_management.html' %}
-</div><!-- End Scene Tab -->
-
-</div><!-- End Tab Content -->
+    </div><!-- End AI Section -->
+    
+    <!-- Scene Management Section -->
+    <div class="collapsible-section bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <button type="button" class="section-toggle w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors rounded-t-xl" data-section="scene">
+            <div class="flex items-center">
+                <svg class="h-6 w-6 text-indigo-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                </svg>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Scene Management</h2>
+            </div>
+            <svg class="toggle-icon h-5 w-5 text-gray-500 dark:text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+        <div class="section-content hidden" id="scene-content">
+            <div class="p-6">
+                {% include 'scene_management.html' %}
+            </div>
+        </div>
+    </div><!-- End Scene Section -->
+</div><!-- End Collapsible Sections -->
 
 <!-- Progress Modal -->
 <div id="progress-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
@@ -373,8 +389,6 @@
     </div>
 </div>
 
-<!-- Scene Management Section -->
-{% include 'scene_management.html' %}
 
 <!-- AI Generation Modal -->
 <div id="ai-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">

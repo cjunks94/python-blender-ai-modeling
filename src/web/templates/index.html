@@ -100,12 +100,12 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <!-- Size -->
                         <div>
-                            <label for="size" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="size" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Size: <span id="size-value" class="text-blender-orange font-semibold">2.0</span>
                             </label>
                             <input type="range" id="size" name="size" min="0.1" max="10" step="0.1" value="2.0" 
                                    class="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider">
-                            <div class="flex text-xs text-gray-500 mt-1">
+                            <div class="flex text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 <span>0.1</span>
                                 <span class="ml-auto">10.0</span>
                             </div>
@@ -113,12 +113,12 @@
                         
                         <!-- Position X -->
                         <div>
-                            <label for="pos_x" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="pos_x" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Position X: <span id="pos-x-value" class="text-blender-orange font-semibold">0.0</span>
                             </label>
                             <input type="range" id="pos_x" name="pos_x" min="-10" max="10" step="0.1" value="0.0" 
                                    class="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider">
-                            <div class="flex text-xs text-gray-500 mt-1">
+                            <div class="flex text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 <span>-10</span>
                                 <span class="ml-auto">10</span>
                             </div>
@@ -127,11 +127,11 @@
                     
                     <!-- Rotation Controls -->
                     <div>
-                        <h4 class="text-sm font-medium text-gray-700 mb-3">Rotation (degrees)</h4>
+                        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Rotation (degrees)</h4>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <!-- Rotation X -->
                             <div>
-                                <label for="rot_x" class="block text-xs font-medium text-gray-600 mb-1">
+                                <label for="rot_x" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                     X: <span id="rot-x-value" class="text-blender-orange font-semibold">0°</span>
                                 </label>
                                 <input type="range" id="rot_x" name="rot_x" min="-180" max="180" step="5" value="0" 
@@ -144,7 +144,7 @@
                             
                             <!-- Rotation Y -->
                             <div>
-                                <label for="rot_y" class="block text-xs font-medium text-gray-600 mb-1">
+                                <label for="rot_y" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                     Y: <span id="rot-y-value" class="text-blender-orange font-semibold">0°</span>
                                 </label>
                                 <input type="range" id="rot_y" name="rot_y" min="-180" max="180" step="5" value="0" 
@@ -157,7 +157,7 @@
                             
                             <!-- Rotation Z -->
                             <div>
-                                <label for="rot_z" class="block text-xs font-medium text-gray-600 mb-1">
+                                <label for="rot_z" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                     Z: <span id="rot-z-value" class="text-blender-orange font-semibold">0°</span>
                                 </label>
                                 <input type="range" id="rot_z" name="rot_z" min="-180" max="180" step="5" value="0" 
@@ -172,11 +172,11 @@
                     
                     <!-- Material/Color Controls -->
                     <div>
-                        <h4 class="text-sm font-medium text-gray-700 mb-3">Material Settings</h4>
+                        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Material Settings</h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <!-- Color Picker -->
                             <div>
-                                <label for="color" class="block text-xs font-medium text-gray-600 mb-2">
+                                <label for="color" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
                                     Base Color
                                 </label>
                                 <div class="flex items-center space-x-3">
@@ -189,7 +189,7 @@
                             
                             <!-- Metallic Slider -->
                             <div>
-                                <label for="metallic" class="block text-xs font-medium text-gray-600 mb-1">
+                                <label for="metallic" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                     Metallic: <span id="metallic-value" class="text-blender-orange font-semibold">0.0</span>
                                 </label>
                                 <input type="range" id="metallic" name="metallic" min="0" max="1" step="0.1" value="0" 
@@ -202,7 +202,7 @@
                             
                             <!-- Roughness Slider -->
                             <div>
-                                <label for="roughness" class="block text-xs font-medium text-gray-600 mb-1">
+                                <label for="roughness" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                     Roughness: <span id="roughness-value" class="text-blender-orange font-semibold">0.5</span>
                                 </label>
                                 <input type="range" id="roughness" name="roughness" min="0" max="1" step="0.1" value="0.5" 
@@ -218,10 +218,10 @@
                                 <label class="flex items-center space-x-3 cursor-pointer">
                                     <input type="checkbox" id="emission" name="emission" 
                                            class="w-4 h-4 text-blender-orange bg-gray-100 border-gray-300 rounded focus:ring-blender-orange">
-                                    <span class="text-sm font-medium text-gray-700">Emission (Glow)</span>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Emission (Glow)</span>
                                 </label>
                                 <div id="emission-strength-container" class="mt-2 hidden">
-                                    <label for="emission-strength" class="block text-xs font-medium text-gray-600 mb-1">
+                                    <label for="emission-strength" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                         Strength: <span id="emission-strength-value" class="text-blender-orange font-semibold">1.0</span>
                                     </label>
                                     <input type="range" id="emission-strength" name="emission_strength" min="0" max="10" step="0.5" value="1.0" 
@@ -255,11 +255,11 @@
             </h3>
             
             <div id="status-container" class="space-y-3">
-                <div class="flex items-center text-sm text-gray-600">
+                <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
                     <div class="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
                     Application ready
                 </div>
-                <div class="flex items-center text-sm text-gray-600">
+                <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
                     <div class="w-2 h-2 bg-yellow-400 rounded-full mr-3"></div>
                     Waiting for user input
                 </div>
@@ -277,8 +277,8 @@
             </h3>
             
             <div class="space-y-3">
-                <div id="preview-container" class="relative bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center" style="aspect-ratio: 1;">
-                    <div id="preview-loading" class="flex flex-col items-center text-gray-500">
+                <div id="preview-container" class="relative bg-gray-50 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center" style="aspect-ratio: 1;">
+                    <div id="preview-loading" class="flex flex-col items-center text-gray-500 dark:text-gray-400">
                         <svg class="animate-spin h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -294,7 +294,7 @@
                     </div>
                 </div>
                 
-                <div id="preview-info" class="text-xs text-gray-500 text-center hidden">
+                <div id="preview-info" class="text-xs text-gray-500 dark:text-gray-400 text-center hidden">
                     <span id="preview-dimensions"></span>
                 </div>
             </div>
@@ -317,11 +317,11 @@
                     <option value="stl">STL - Stereolithography (3D Printing)</option>
                 </select>
                 
-                <button id="export-btn" disabled class="w-full bg-gray-300 text-gray-500 font-semibold py-2 px-4 rounded-lg cursor-not-allowed">
+                <button id="export-btn" disabled class="w-full bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-semibold py-2 px-4 rounded-lg cursor-not-allowed">
                     Export Model
                 </button>
                 
-                <p class="text-xs text-gray-500 text-center">
+                <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
                     Generate a model first to enable export
                 </p>
             </div>
@@ -366,7 +366,7 @@
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blender-orange mx-auto mb-4"></div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Generating Model</h3>
             <p class="text-gray-600 dark:text-gray-400 mb-4">Blender is processing your request...</p>
-            <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div id="progress-bar" class="bg-blender-orange h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
         </div>
@@ -386,7 +386,7 @@
                 </svg>
                 AI Model Generation
             </h3>
-            <button id="ai-modal-close" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <button id="ai-modal-close" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -440,7 +440,7 @@
             <div id="ai-status" class="hidden p-4 rounded-lg border">
                 <div class="flex items-center">
                     <div id="ai-spinner" class="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-3"></div>
-                    <span id="ai-status-text" class="text-sm text-gray-700">Processing your description...</span>
+                    <span id="ai-status-text" class="text-sm text-gray-700 dark:text-gray-300">Processing your description...</span>
                 </div>
             </div>
             

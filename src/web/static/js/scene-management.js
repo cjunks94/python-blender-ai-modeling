@@ -96,6 +96,20 @@ class SceneManager {
                 btn.addEventListener('click', () => this.showExportModal(exportType));
             }
         });
+        
+        // Composition buttons
+        const compositionButtons = {
+            'compose-align-btn': 'align',
+            'compose-distribute-btn': 'distribute',
+            'compose-arrange-btn': 'arrange'
+        };
+        
+        Object.entries(compositionButtons).forEach(([id, action]) => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.addEventListener('click', () => this.showCompositionModal(action));
+            }
+        });
 
         // Validation
         const validateSceneBtn = document.getElementById('validate-scene-btn');
@@ -200,6 +214,9 @@ class SceneManager {
         const exportSelectiveBtn = document.getElementById('export-selective-btn');
         const validateBtn = document.getElementById('validate-scene-btn');
         const previewBtn = document.getElementById('generate-scene-preview-btn');
+        const composeAlignBtn = document.getElementById('compose-align-btn');
+        const composeDistributeBtn = document.getElementById('compose-distribute-btn');
+        const composeArrangeBtn = document.getElementById('compose-arrange-btn');
 
         if (scene && scene.object_count > 0) {
             if (exportCompleteBtn) exportCompleteBtn.disabled = false;
@@ -207,12 +224,18 @@ class SceneManager {
             if (exportSelectiveBtn) exportSelectiveBtn.disabled = false;
             if (validateBtn) validateBtn.disabled = false;
             if (previewBtn) previewBtn.disabled = false;
+            if (composeAlignBtn) composeAlignBtn.disabled = false;
+            if (composeDistributeBtn) composeDistributeBtn.disabled = false;
+            if (composeArrangeBtn) composeArrangeBtn.disabled = false;
         } else {
             if (exportCompleteBtn) exportCompleteBtn.disabled = true;
             if (exportIndividualBtn) exportIndividualBtn.disabled = true;
             if (exportSelectiveBtn) exportSelectiveBtn.disabled = true;
             if (validateBtn) validateBtn.disabled = true;
             if (previewBtn) previewBtn.disabled = true;
+            if (composeAlignBtn) composeAlignBtn.disabled = true;
+            if (composeDistributeBtn) composeDistributeBtn.disabled = true;
+            if (composeArrangeBtn) composeArrangeBtn.disabled = true;
         }
     }
 
@@ -615,6 +638,228 @@ class SceneManager {
         `;
 
         this.showModal('Export Complete', successMessage);
+    }
+    
+    showCompositionModal(action) {
+        if (!this.currentScene) {
+            this.showError('No scene selected');
+            return;
+        }
+        
+        let modalContent = '';
+        
+        if (action === 'align') {
+            modalContent = this.getAlignModalContent();
+        } else if (action === 'distribute') {
+            modalContent = this.getDistributeModalContent();
+        } else if (action === 'arrange') {
+            modalContent = this.getArrangeModalContent();
+        }
+        
+        this.showModal(`Composition Tool: ${action.charAt(0).toUpperCase() + action.slice(1)}`, modalContent);
+    }
+    
+    getAlignModalContent() {
+        return `
+            <div class="composition-modal-content">
+                <p class="mb-4">Align objects along a specific axis.</p>
+                
+                <div class="form-group mb-4">
+                    <label class="block text-sm font-medium mb-2">Alignment Axis</label>
+                    <select id="align-axis" class="form-control">
+                        <option value="x">X Axis (Left/Right)</option>
+                        <option value="y">Y Axis (Up/Down)</option>
+                        <option value="z">Z Axis (Forward/Back)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group mb-4">
+                    <label class="block text-sm font-medium mb-2">Alignment Mode</label>
+                    <select id="align-mode" class="form-control">
+                        <option value="center">Center</option>
+                        <option value="min">Minimum (Left/Bottom/Front)</option>
+                        <option value="max">Maximum (Right/Top/Back)</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button class="btn btn-outline" onclick="sceneManager.closeModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="sceneManager.executeComposition('align')">Apply Alignment</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    getDistributeModalContent() {
+        return `
+            <div class="composition-modal-content">
+                <p class="mb-4">Distribute objects evenly along an axis.</p>
+                
+                <div class="form-group mb-4">
+                    <label class="block text-sm font-medium mb-2">Distribution Axis</label>
+                    <select id="distribute-axis" class="form-control">
+                        <option value="x">X Axis (Left/Right)</option>
+                        <option value="y">Y Axis (Up/Down)</option>
+                        <option value="z">Z Axis (Forward/Back)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group mb-4">
+                    <label class="block text-sm font-medium mb-2">Spacing (optional)</label>
+                    <input type="number" id="distribute-spacing" class="form-control" placeholder="Auto" step="0.1">
+                    <p class="text-xs text-gray-500 mt-1">Leave empty for even distribution</p>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button class="btn btn-outline" onclick="sceneManager.closeModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="sceneManager.executeComposition('distribute')">Apply Distribution</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    getArrangeModalContent() {
+        return `
+            <div class="composition-modal-content">
+                <p class="mb-4">Arrange objects in a pattern.</p>
+                
+                <div class="form-group mb-4">
+                    <label class="block text-sm font-medium mb-2">Pattern</label>
+                    <select id="arrange-pattern" class="form-control" onchange="sceneManager.updateArrangeOptions()">
+                        <option value="grid">Grid</option>
+                        <option value="circle">Circle</option>
+                        <option value="spiral">Spiral</option>
+                    </select>
+                </div>
+                
+                <div id="arrange-options">
+                    <!-- Grid Options (default) -->
+                    <div class="grid-options">
+                        <div class="form-group mb-4">
+                            <label class="block text-sm font-medium mb-2">Columns</label>
+                            <input type="number" id="grid-columns" class="form-control" placeholder="Auto" min="1">
+                        </div>
+                        <div class="form-group mb-4">
+                            <label class="block text-sm font-medium mb-2">Spacing</label>
+                            <input type="number" id="grid-spacing" class="form-control" value="2.0" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button class="btn btn-outline" onclick="sceneManager.closeModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="sceneManager.executeComposition('arrange')">Apply Arrangement</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    updateArrangeOptions() {
+        const pattern = document.getElementById('arrange-pattern').value;
+        const optionsDiv = document.getElementById('arrange-options');
+        
+        if (pattern === 'grid') {
+            optionsDiv.innerHTML = `
+                <div class="grid-options">
+                    <div class="form-group mb-4">
+                        <label class="block text-sm font-medium mb-2">Columns</label>
+                        <input type="number" id="grid-columns" class="form-control" placeholder="Auto" min="1">
+                    </div>
+                    <div class="form-group mb-4">
+                        <label class="block text-sm font-medium mb-2">Spacing</label>
+                        <input type="number" id="grid-spacing" class="form-control" value="2.0" step="0.1">
+                    </div>
+                </div>
+            `;
+        } else if (pattern === 'circle') {
+            optionsDiv.innerHTML = `
+                <div class="circle-options">
+                    <div class="form-group mb-4">
+                        <label class="block text-sm font-medium mb-2">Radius</label>
+                        <input type="number" id="circle-radius" class="form-control" value="5.0" step="0.1">
+                    </div>
+                </div>
+            `;
+        } else if (pattern === 'spiral') {
+            optionsDiv.innerHTML = `
+                <div class="spiral-options">
+                    <div class="form-group mb-4">
+                        <label class="block text-sm font-medium mb-2">Spacing</label>
+                        <input type="number" id="spiral-spacing" class="form-control" value="1.0" step="0.1">
+                    </div>
+                    <div class="form-group mb-4">
+                        <label class="block text-sm font-medium mb-2">Height Increment</label>
+                        <input type="number" id="spiral-height" class="form-control" value="0.5" step="0.1">
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    async executeComposition(action) {
+        const selectedObjects = this.getSelectedObjects();
+        
+        let compositionData = {
+            action: action,
+            object_ids: selectedObjects.length > 0 ? selectedObjects : []
+        };
+        
+        // Get action-specific parameters
+        if (action === 'align') {
+            compositionData.axis = document.getElementById('align-axis').value;
+            compositionData.mode = document.getElementById('align-mode').value;
+        } else if (action === 'distribute') {
+            compositionData.axis = document.getElementById('distribute-axis').value;
+            const spacing = document.getElementById('distribute-spacing').value;
+            if (spacing) {
+                compositionData.spacing = parseFloat(spacing);
+            }
+        } else if (action === 'arrange') {
+            compositionData.pattern = document.getElementById('arrange-pattern').value;
+            
+            if (compositionData.pattern === 'grid') {
+                const columns = document.getElementById('grid-columns').value;
+                if (columns) compositionData.columns = parseInt(columns);
+                compositionData.spacing = parseFloat(document.getElementById('grid-spacing').value);
+            } else if (compositionData.pattern === 'circle') {
+                compositionData.radius = parseFloat(document.getElementById('circle-radius').value);
+            } else if (compositionData.pattern === 'spiral') {
+                compositionData.spacing = parseFloat(document.getElementById('spiral-spacing').value);
+                compositionData.height_increment = parseFloat(document.getElementById('spiral-height').value);
+            }
+        }
+        
+        try {
+            this.closeModal();
+            this.showLoading('Applying composition...');
+            
+            const response = await fetch(`/api/scene/${this.currentScene.scene_id}/compose`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(compositionData)
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                notifications.success(data.message);
+                // Reload scene to show updated positions
+                await this.loadScene(this.currentScene.scene_id);
+            } else {
+                this.showError(data.error || 'Composition failed');
+            }
+        } catch (error) {
+            console.error('Composition failed:', error);
+            this.showError('Composition failed');
+        } finally {
+            this.hideLoading();
+        }
+    }
+    
+    getSelectedObjects() {
+        return Array.from(this.selectedObjects);
     }
 
     async validateScene() {

@@ -1672,6 +1672,135 @@ def register_routes(app: Flask) -> None:
                 'error': 'Export failed',
                 'message': str(e)
             }), 500
+    
+    # Scene Composition Routes
+    @app.route('/api/scene/<scene_id>/compose', methods=['POST'])
+    def compose_scene_objects(scene_id):
+        """Apply composition tools to scene objects."""
+        try:
+            data = request.get_json() or {}
+            action = data.get('action')  # 'align', 'distribute', 'arrange', 'stack', 'snap'
+            object_ids = data.get('object_ids', [])
+            
+            # Load the scene
+            scene = app.scene_manager.load_scene(scene_id)
+            if not scene:
+                return jsonify({
+                    'error': 'Scene not found',
+                    'message': f'Scene {scene_id} does not exist'
+                }), 404
+            
+            # Get selected objects or all objects
+            if object_ids:
+                objects = [scene.get_object_by_id(obj_id) for obj_id in object_ids]
+                objects = [obj for obj in objects if obj is not None]
+            else:
+                objects = scene.objects
+            
+            if not objects:
+                return jsonify({
+                    'error': 'No objects to compose',
+                    'message': 'No valid objects found for composition'
+                }), 400
+            
+            # Import compositor
+            from scene_management.scene_compositor import SceneCompositor, AlignmentAxis, AlignmentMode
+            compositor = SceneCompositor()
+            
+            # Apply composition action
+            if action == 'align':
+                axis_str = data.get('axis', 'x').lower()
+                mode_str = data.get('mode', 'center').lower()
+                
+                axis = AlignmentAxis(axis_str)
+                mode = AlignmentMode(mode_str)
+                
+                objects = compositor.align_objects(objects, axis, mode)
+                message = f"Aligned {len(objects)} objects along {axis_str} axis"
+                
+            elif action == 'distribute':
+                axis_str = data.get('axis', 'x').lower()
+                spacing = data.get('spacing')
+                
+                axis = AlignmentAxis(axis_str)
+                objects = compositor.distribute_objects(objects, axis, spacing=spacing)
+                message = f"Distributed {len(objects)} objects along {axis_str} axis"
+                
+            elif action == 'arrange':
+                pattern = data.get('pattern', 'grid')
+                
+                if pattern == 'grid':
+                    columns = data.get('columns')
+                    spacing = data.get('spacing', 2.0)
+                    objects = compositor.arrange_in_grid(objects, columns=columns, spacing=spacing)
+                    message = f"Arranged {len(objects)} objects in grid pattern"
+                    
+                elif pattern == 'circle':
+                    radius = data.get('radius', 5.0)
+                    objects = compositor.arrange_in_circle(objects, radius=radius)
+                    message = f"Arranged {len(objects)} objects in circle pattern"
+                    
+                elif pattern == 'spiral':
+                    spacing = data.get('spacing', 1.0)
+                    height_increment = data.get('height_increment', 0.5)
+                    objects = compositor.arrange_in_spiral(
+                        objects, spacing=spacing, height_increment=height_increment
+                    )
+                    message = f"Arranged {len(objects)} objects in spiral pattern"
+                    
+                else:
+                    return jsonify({
+                        'error': 'Invalid pattern',
+                        'message': f'Pattern {pattern} is not supported'
+                    }), 400
+                    
+            elif action == 'stack':
+                axis_str = data.get('axis', 'y').lower()
+                spacing = data.get('spacing', 0.1)
+                
+                axis = AlignmentAxis(axis_str)
+                objects = compositor.stack_objects(objects, axis=axis, spacing=spacing)
+                message = f"Stacked {len(objects)} objects along {axis_str} axis"
+                
+            elif action == 'snap':
+                grid_size = data.get('grid_size', 1.0)
+                objects = compositor.snap_to_grid(objects, grid_size=grid_size)
+                message = f"Snapped {len(objects)} objects to grid"
+                
+            else:
+                return jsonify({
+                    'error': 'Invalid action',
+                    'message': f'Action {action} is not supported'
+                }), 400
+            
+            # Save the scene with updated positions
+            app.scene_manager.save_scene(scene)
+            
+            # Return updated object positions
+            updated_objects = []
+            for obj in objects:
+                updated_objects.append({
+                    'id': obj.id,
+                    'name': obj.name,
+                    'position': list(obj.position),
+                    'rotation': list(obj.rotation),
+                    'size': obj.size
+                })
+            
+            return jsonify({
+                'success': True,
+                'action': action,
+                'message': message,
+                'updated_objects': updated_objects,
+                'scene_id': scene_id
+            })
+            
+        except Exception as e:
+            logger.error(f"Scene composition error: {str(e)}")
+            return jsonify({
+                'error': 'Composition failed',
+                'message': str(e)
+            }), 500
 
 
 def register_error_handlers(app: Flask) -> None:
